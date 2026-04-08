@@ -81,7 +81,7 @@ Plans:
 
 Plans:
 - [x] 04-01-PLAN.md — Installer script (install.sh) and CLI wrapper (bin/claude-secure)
-- [ ] 04-02-PLAN.md — Integration tests for all INST and PLAT requirements
+- [x] 04-02-PLAN.md — Integration tests for all INST and PLAT requirements
 
 ### Phase 5: Integration Testing
 **Goal**: Every security claim made by claude-secure is verified by automated tests that run in the actual Docker environment
