@@ -12,20 +12,22 @@ No secret ever leaves the isolated environment uncontrolled — every outbound c
 
 ### Validated
 
-(None yet — ship to validate)
+- [x] Docker Compose setup with three containers (claude, proxy, validator) on isolated internal network — *Validated in Phase 01: docker-infrastructure*
+- [x] Whitelist configuration (JSON) mapping secrets to placeholder names, environment variables, and allowed domains — *Validated in Phase 01: docker-infrastructure*
+- [x] File permissions model: hooks and config are root-owned and read-only, workspace is user-writable — *Validated in Phase 01: docker-infrastructure*
 
 ### Active
 
-- [ ] Docker Compose setup with three containers (claude, proxy, validator) on isolated internal network
+
 - [ ] PreToolUse hook that intercepts Bash/WebFetch/WebSearch tool calls, checks domains against whitelist, blocks payloads to non-whitelisted domains
 - [ ] Hook generates unique call-ID and registers it with the validator before allowing whitelisted calls
 - [ ] Anthropic proxy that intercepts all Claude-to-Anthropic traffic, redacts known secret values, and replaces them with placeholders
 - [ ] Proxy restores placeholders to real values in Anthropic responses so Claude can use them in tool calls
 - [ ] SQLite-based call validator with HTTP registration endpoint and iptables integration for network-level enforcement
 - [ ] Call-IDs are single-use and time-limited (10-second expiry)
-- [ ] Whitelist configuration (JSON) mapping secrets to placeholder names, environment variables, and allowed domains
+
 - [ ] Installer script with dependency checking, auth setup (API key or OAuth token), workspace configuration, and CLI shortcut
-- [ ] File permissions model: hooks and config are root-owned and read-only, workspace is user-writable
+
 - [ ] OAuth token authentication as primary auth method
 - [ ] Support for Linux (native) and WSL2
 - [ ] Integration tests that verify blocked/allowed call scenarios end-to-end in Docker
@@ -87,4 +89,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-08 after initialization*
+*Last updated: 2026-04-08 after Phase 01 completion — Docker infrastructure validated*
