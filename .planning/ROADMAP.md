@@ -62,7 +62,11 @@ Plans:
   2. When Anthropic's response contains a placeholder, the proxy restores it to the real secret value (scoped to auth/controlled contexts only)
   3. The proxy correctly forwards API key or OAuth token authentication to Anthropic
   4. Changing the whitelist.json file takes effect on the next request without restarting any container
-**Plans**: TBD
+**Plans:** 2 plans
+
+Plans:
+- [ ] 03-01-PLAN.md — Implement secret-redacting proxy and configure auth env vars in docker-compose
+- [ ] 03-02-PLAN.md — Integration tests for all SECR requirements
 
 ### Phase 4: Installation & Platform
 **Goal**: A developer can install claude-secure with a single script and launch it with a single command on Linux or WSL2
@@ -73,7 +77,11 @@ Plans:
   2. The installer detects missing dependencies and reports clear error messages before proceeding
   3. Running `claude-secure` from the terminal launches the full Docker environment and drops the user into Claude Code
   4. The same installer and runtime work correctly on WSL2 with Docker (including iptables/nftables detection)
-**Plans**: TBD
+**Plans:** 2 plans
+
+Plans:
+- [ ] 03-01-PLAN.md — Implement secret-redacting proxy and configure auth env vars in docker-compose
+- [ ] 03-02-PLAN.md — Integration tests for all SECR requirements
 
 ### Phase 5: Integration Testing
 **Goal**: Every security claim made by claude-secure is verified by automated tests that run in the actual Docker environment
@@ -84,7 +92,11 @@ Plans:
   2. Tests verify both the "block" path (unauthorized calls fail) and the "allow" path (authorized calls succeed)
   3. Tests verify that secret values appear in proxy-to-Anthropic traffic only as placeholders, never as cleartext
   4. Tests can run in CI (no interactive input required)
-**Plans**: TBD
+**Plans:** 2 plans
+
+Plans:
+- [ ] 03-01-PLAN.md — Implement secret-redacting proxy and configure auth env vars in docker-compose
+- [ ] 03-02-PLAN.md — Integration tests for all SECR requirements
 
 ## Progress
 
