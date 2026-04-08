@@ -1,0 +1,64 @@
+services:
+  claude:
+    build: ./claude
+    container_name: claude-secure
+    stdin_open: true
+    tty: true
+    command: ["claude", "--dangerously-skip-permissions"]
+    environment:
+      - ANTHROPIC_BASE_URL=http://proxy:8080
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-dummy}
+      - CLAUDE_CODE_OAUTH_TOKEN=${CLAUDE_CODE_OAUTH_TOKEN:-}
+    dns:
+      - "127.0.0.1"
+    volumes:
+      - workspace:/workspace
+      - ./config/whitelist.json:/etc/claude-secure/whitelist.json:ro
+    networks:
+      - claude-internal
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      proxy:
+        condition: service_started
+      validator:
+        condition: service_started
+
+  proxy:
+    build: ./proxy
+    container_name: claude-proxy
+    environment:
+      - REAL_ANTHROPIC_BASE_URL=https://api.anthropic.com
+      - WHITELIST_PATH=/etc/claude-secure/whitelist.json
+    volumes:
+      - ./config/whitelist.json:/etc/claude-secure/whitelist.json:ro
+    networks:
+      - claude-internal
+      - claude-external
+
+  validator:
+    build: ./validator
+    container_name: claude-validator
+    volumes:
+      - ./config/whitelist.json:/etc/claude-secure/whitelist.json:ro
+      - validator-db:/data
+    networks:
+      - claude-internal
+    cap_add:
+      - NET_ADMIN
+
+networks:
+  claude-internal:
+    internal: true
+  claude-external: {}
+
+volumes:
+  workspace:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${WORKSPACE_PATH:-./workspace}
+  validator-db:

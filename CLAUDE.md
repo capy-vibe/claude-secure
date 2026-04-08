@@ -26,7 +26,7 @@ An installable security wrapper for Claude Code that runs it in a fully network-
 |------------|---------|---------|-----------------|------------|
 | Docker Engine | 24.x+ | Container runtime for isolation | Industry standard. `internal` network flag provides true network isolation without iptables on the host. Required by project constraints. | HIGH |
 | Docker Compose | v2.24+ | Multi-container orchestration | Declarative networking, service dependencies, health checks. V2 is the current standard (v1 is deprecated). `internal: true` on networks prevents external access. | HIGH |
-| Node.js | 20 LTS | Anthropic proxy service | LTS until April 2026. Native `http` module is sufficient for a buffered forward proxy -- no framework needed. Excellent JSON manipulation for secret redaction. | HIGH |
+| Node.js | 22 LTS | Anthropic proxy service | LTS until April 2027. Native `http` module is sufficient for a buffered forward proxy -- no framework needed. Excellent JSON manipulation for secret redaction. | HIGH |
 | Python | 3.11+ | Call validator service | stdlib `http.server` + `sqlite3` means zero external dependencies. Perfect for a lightweight validation microservice. | HIGH |
 | SQLite | 3.x (bundled with Python) | Call-ID registration store | Zero-config, single-file, bundled with Python. WAL mode handles concurrent reads/writes from HTTP server + iptables helper. | HIGH |
 | iptables | system (nftables backend) | Network-level call enforcement | Available in all Linux containers with `NET_ADMIN` capability. Modern kernels use nftables backend transparently via iptables CLI. | HIGH |
