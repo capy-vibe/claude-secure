@@ -34,7 +34,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 Plans:
 - [x] 01-01-PLAN.md -- Docker infrastructure: whitelist config, Dockerfiles, docker-compose.yml, stub services, build and verify topology
-- [ ] 01-02-PLAN.md -- Integration tests: test script verifying all 9 requirements, run and confirm all pass
+- [x] 01-02-PLAN.md -- Integration tests: test script verifying all 9 requirements, run and confirm all pass
 
 ### Phase 2: Call Validation
 **Goal**: Every outbound tool call from Claude Code is intercepted, checked against the domain allowlist, and only allowed through the network if registered with a valid single-use call-ID
