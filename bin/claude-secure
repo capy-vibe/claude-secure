@@ -1,0 +1,46 @@
+#!/bin/bash
+set -euo pipefail
+
+CONFIG_DIR="$HOME/.claude-secure"
+
+# Verify installation
+if [ ! -f "$CONFIG_DIR/config.sh" ]; then
+  echo "ERROR: claude-secure not installed. Run install.sh first." >&2
+  exit 1
+fi
+
+if [ ! -f "$CONFIG_DIR/.env" ]; then
+  echo "ERROR: No auth credentials found. Run install.sh first." >&2
+  exit 1
+fi
+
+# Load configuration (provides APP_DIR, WORKSPACE_PATH, PLATFORM)
+# shellcheck source=/dev/null
+source "$CONFIG_DIR/config.sh"
+
+# Load and auto-export auth credentials and secret env vars
+# set -a makes all subsequent variable assignments exported (required for docker compose)
+set -a
+# shellcheck source=/dev/null
+source "$CONFIG_DIR/.env"
+set +a
+
+# Set COMPOSE_FILE so docker compose works from any directory
+export COMPOSE_FILE="$APP_DIR/docker-compose.yml"
+export WORKSPACE_PATH
+
+case "${1:-}" in
+  stop)
+    docker compose down
+    ;;
+  status)
+    docker compose ps
+    ;;
+  update)
+    cd "$APP_DIR" && git pull && docker compose build
+    ;;
+  *)
+    docker compose up -d
+    docker compose exec -it claude claude
+    ;;
+esac
