@@ -65,7 +65,7 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 03-01-PLAN.md — Implement secret-redacting proxy and configure auth env vars in docker-compose
+- [x] 03-01-PLAN.md — Implement secret-redacting proxy and configure auth env vars in docker-compose
 - [ ] 03-02-PLAN.md — Integration tests for all SECR requirements
 
 ### Phase 4: Installation & Platform

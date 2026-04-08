@@ -16,11 +16,11 @@
 
 ### Secret Redaction
 
-- [ ] **SECR-01**: Proxy intercepts all Claude-to-Anthropic API traffic via ANTHROPIC_BASE_URL override
-- [ ] **SECR-02**: Proxy replaces known secret values in outbound request bodies with configured placeholders
-- [ ] **SECR-03**: Proxy restores placeholders to real secret values in Anthropic response bodies
-- [ ] **SECR-04**: Proxy reads secret mappings fresh from whitelist config on each request (hot-reload, no restart needed)
-- [ ] **SECR-05**: Proxy forwards authentication credentials (API key or OAuth token) correctly to Anthropic
+- [x] **SECR-01**: Proxy intercepts all Claude-to-Anthropic API traffic via ANTHROPIC_BASE_URL override
+- [x] **SECR-02**: Proxy replaces known secret values in outbound request bodies with configured placeholders
+- [x] **SECR-03**: Proxy restores placeholders to real secret values in Anthropic response bodies
+- [x] **SECR-04**: Proxy reads secret mappings fresh from whitelist config on each request (hot-reload, no restart needed)
+- [x] **SECR-05**: Proxy forwards authentication credentials (API key or OAuth token) correctly to Anthropic
 
 ### Call Validation
 
@@ -106,11 +106,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DOCK-04 | Phase 1 | Complete |
 | DOCK-05 | Phase 1 | Complete |
 | DOCK-06 | Phase 1 | Complete |
-| SECR-01 | Phase 3 | Pending |
-| SECR-02 | Phase 3 | Pending |
-| SECR-03 | Phase 3 | Pending |
-| SECR-04 | Phase 3 | Pending |
-| SECR-05 | Phase 3 | Pending |
+| SECR-01 | Phase 3 | Complete |
+| SECR-02 | Phase 3 | Complete |
+| SECR-03 | Phase 3 | Complete |
+| SECR-04 | Phase 3 | Complete |
+| SECR-05 | Phase 3 | Complete |
 | CALL-01 | Phase 2 | Complete |
 | CALL-02 | Phase 2 | Complete |
 | CALL-03 | Phase 2 | Complete |
