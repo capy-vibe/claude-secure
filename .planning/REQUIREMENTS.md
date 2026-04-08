@@ -7,12 +7,12 @@
 
 ### Docker Isolation
 
-- [ ] **DOCK-01**: Claude container runs on an internal Docker network with no direct internet access
-- [ ] **DOCK-02**: Only the proxy container has access to the external network (internet)
-- [ ] **DOCK-03**: Docker Compose orchestrates all containers with correct network assignments and dependencies
-- [ ] **DOCK-04**: DNS queries from the claude container are blocked or routed to a controlled resolver to prevent DNS exfiltration
-- [ ] **DOCK-05**: Hook scripts, settings.json, and whitelist.json are root-owned and read-only (chmod 444/555) inside the claude container
-- [ ] **DOCK-06**: Claude container drops all capabilities (`cap_drop: ALL`) and sets `no-new-privileges`
+- [x] **DOCK-01**: Claude container runs on an internal Docker network with no direct internet access
+- [x] **DOCK-02**: Only the proxy container has access to the external network (internet)
+- [x] **DOCK-03**: Docker Compose orchestrates all containers with correct network assignments and dependencies
+- [x] **DOCK-04**: DNS queries from the claude container are blocked or routed to a controlled resolver to prevent DNS exfiltration
+- [x] **DOCK-05**: Hook scripts, settings.json, and whitelist.json are root-owned and read-only (chmod 444/555) inside the claude container
+- [x] **DOCK-06**: Claude container drops all capabilities (`cap_drop: ALL`) and sets `no-new-privileges`
 
 ### Secret Redaction
 
@@ -34,9 +34,9 @@
 
 ### Whitelist Configuration
 
-- [ ] **WHIT-01**: Whitelist is a JSON file mapping secret placeholders to environment variable names and allowed domains
-- [ ] **WHIT-02**: Whitelist supports a readonly_domains list for domains that allow GET but no secret injection
-- [ ] **WHIT-03**: Whitelist file is root-owned and read-only, mounted into containers that need it
+- [x] **WHIT-01**: Whitelist is a JSON file mapping secret placeholders to environment variable names and allowed domains
+- [x] **WHIT-02**: Whitelist supports a readonly_domains list for domains that allow GET but no secret injection
+- [x] **WHIT-03**: Whitelist file is root-owned and read-only, mounted into containers that need it
 
 ### Installation
 
@@ -100,12 +100,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DOCK-01 | Phase 1 | Pending |
-| DOCK-02 | Phase 1 | Pending |
-| DOCK-03 | Phase 1 | Pending |
-| DOCK-04 | Phase 1 | Pending |
-| DOCK-05 | Phase 1 | Pending |
-| DOCK-06 | Phase 1 | Pending |
+| DOCK-01 | Phase 1 | Complete |
+| DOCK-02 | Phase 1 | Complete |
+| DOCK-03 | Phase 1 | Complete |
+| DOCK-04 | Phase 1 | Complete |
+| DOCK-05 | Phase 1 | Complete |
+| DOCK-06 | Phase 1 | Complete |
 | SECR-01 | Phase 3 | Pending |
 | SECR-02 | Phase 3 | Pending |
 | SECR-03 | Phase 3 | Pending |
@@ -118,9 +118,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CALL-05 | Phase 2 | Pending |
 | CALL-06 | Phase 2 | Pending |
 | CALL-07 | Phase 2 | Pending |
-| WHIT-01 | Phase 1 | Pending |
-| WHIT-02 | Phase 1 | Pending |
-| WHIT-03 | Phase 1 | Pending |
+| WHIT-01 | Phase 1 | Complete |
+| WHIT-02 | Phase 1 | Complete |
+| WHIT-03 | Phase 1 | Complete |
 | INST-01 | Phase 4 | Pending |
 | INST-02 | Phase 4 | Pending |
 | INST-03 | Phase 4 | Pending |

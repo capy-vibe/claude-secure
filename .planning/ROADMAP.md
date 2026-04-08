@@ -33,7 +33,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans:** 2 plans
 
 Plans:
-- [ ] 01-01-PLAN.md -- Docker infrastructure: whitelist config, Dockerfiles, docker-compose.yml, stub services, build and verify topology
+- [x] 01-01-PLAN.md -- Docker infrastructure: whitelist config, Dockerfiles, docker-compose.yml, stub services, build and verify topology
 - [ ] 01-02-PLAN.md -- Integration tests: test script verifying all 9 requirements, run and confirm all pass
 
 ### Phase 2: Call Validation
