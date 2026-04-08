@@ -6,8 +6,11 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/* && \
     npm install -g @anthropic-ai/claude-code
 
+# Create non-root user for Claude Code (refuses to run as root with --dangerously-skip-permissions)
+RUN useradd -m -s /bin/bash claude
+
 # Create log directory
-RUN mkdir -p /var/log/claude-secure
+RUN mkdir -p /var/log/claude-secure && chown claude:claude /var/log/claude-secure
 
 # Hook scripts -- root-owned, execute-only (per DOCK-05)
 COPY hooks/ /etc/claude-secure/hooks/
@@ -15,13 +18,15 @@ RUN chown -R root:root /etc/claude-secure/hooks/ && \
     chmod 555 /etc/claude-secure/hooks/ && \
     chmod 555 /etc/claude-secure/hooks/*.sh
 
-# Settings with hook configuration -- placed OUTSIDE /root/.claude to avoid
-# being shadowed by the claude-auth named volume mount (per Blocker 4).
+# Settings with hook configuration -- placed OUTSIDE user home to avoid
+# being shadowed by any volume mount on ~/.claude.
 # Symlink ensures Claude Code finds it at the expected path.
 COPY settings.json /etc/claude-secure/settings.json
 RUN chown root:root /etc/claude-secure/settings.json && \
     chmod 444 /etc/claude-secure/settings.json && \
-    mkdir -p /root/.claude && \
-    ln -sf /etc/claude-secure/settings.json /root/.claude/settings.json
+    mkdir -p /home/claude/.claude && \
+    ln -sf /etc/claude-secure/settings.json /home/claude/.claude/settings.json && \
+    chown -R claude:claude /home/claude/.claude
 
+USER claude
 WORKDIR /workspace

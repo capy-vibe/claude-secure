@@ -4,7 +4,7 @@ services:
     container_name: claude-secure
     stdin_open: true
     tty: true
-    command: ["claude", "--dangerously-skip-permissions"]
+    command: ["sleep", "infinity"]
     environment:
       - ANTHROPIC_BASE_URL=http://proxy:8080
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-dummy}
