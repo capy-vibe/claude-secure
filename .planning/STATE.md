@@ -96,8 +96,15 @@ None yet.
 - [Research]: iptables backend on WSL2 varies by distro/kernel -- validate in installer preflight (Phase 4)
 - ~~[Research]: Bidirectional placeholder restoration must be scoped to auth contexts only to prevent covert channel~~ — Addressed in Phase 3: proxy does full bidirectional replacement with longest-first ordering
 
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260409-2jp | Write a README.md for the claude-secure project | 2026-04-08 | 8fc85b6 | [260409-2jp-write-a-readme-md-for-the-claude-secure-](./quick/260409-2jp-write-a-readme-md-for-the-claude-secure-/) |
+
 ## Session Continuity
 
 Last session: 2026-04-08T23:54:14.103Z
+Last activity: 2026-04-08 - Completed quick task 260409-2jp: Write a README.md for the claude-secure project
 Stopped at: Completed quick-260409-2jp
 Resume file: None
