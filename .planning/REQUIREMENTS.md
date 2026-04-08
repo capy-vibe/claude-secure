@@ -100,13 +100,47 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| | | |
+| DOCK-01 | Phase 1 | Pending |
+| DOCK-02 | Phase 1 | Pending |
+| DOCK-03 | Phase 1 | Pending |
+| DOCK-04 | Phase 1 | Pending |
+| DOCK-05 | Phase 1 | Pending |
+| DOCK-06 | Phase 1 | Pending |
+| SECR-01 | Phase 3 | Pending |
+| SECR-02 | Phase 3 | Pending |
+| SECR-03 | Phase 3 | Pending |
+| SECR-04 | Phase 3 | Pending |
+| SECR-05 | Phase 3 | Pending |
+| CALL-01 | Phase 2 | Pending |
+| CALL-02 | Phase 2 | Pending |
+| CALL-03 | Phase 2 | Pending |
+| CALL-04 | Phase 2 | Pending |
+| CALL-05 | Phase 2 | Pending |
+| CALL-06 | Phase 2 | Pending |
+| CALL-07 | Phase 2 | Pending |
+| WHIT-01 | Phase 1 | Pending |
+| WHIT-02 | Phase 1 | Pending |
+| WHIT-03 | Phase 1 | Pending |
+| INST-01 | Phase 4 | Pending |
+| INST-02 | Phase 4 | Pending |
+| INST-03 | Phase 4 | Pending |
+| INST-04 | Phase 4 | Pending |
+| INST-05 | Phase 4 | Pending |
+| INST-06 | Phase 4 | Pending |
+| TEST-01 | Phase 5 | Pending |
+| TEST-02 | Phase 5 | Pending |
+| TEST-03 | Phase 5 | Pending |
+| TEST-04 | Phase 5 | Pending |
+| TEST-05 | Phase 5 | Pending |
+| PLAT-01 | Phase 4 | Pending |
+| PLAT-02 | Phase 4 | Pending |
+| PLAT-03 | Phase 4 | Pending |
 
 **Coverage:**
 - v1 requirements: 28 total
-- Mapped to phases: 0
-- Unmapped: 28
+- Mapped to phases: 28
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-04-08*
-*Last updated: 2026-04-08 after initial definition*
+*Last updated: 2026-04-08 after roadmap creation*
