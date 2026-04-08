@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: verifying
-stopped_at: Phase 4 context gathered
-last_updated: "2026-04-08T23:16:18.630Z"
+status: executing
+stopped_at: Completed 04-01-PLAN.md
+last_updated: "2026-04-08T23:38:24.023Z"
 last_activity: 2026-04-08
 progress:
   total_phases: 5
   completed_phases: 3
-  total_plans: 7
-  completed_plans: 7
+  total_plans: 9
+  completed_plans: 8
   percent: 100
 ---
 
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-09)
 
 **Core value:** No secret ever leaves the isolated environment uncontrolled -- every outbound call is validated, every secret in LLM context is redacted, and Claude Code cannot bypass the security layers.
-**Current focus:** Phase 04 — installation-&-platform
+**Current focus:** Phase 04 — installation-platform
 
 ## Current Position
 
-Phase: 4
-Plan: Not started
-Status: Phase complete — ready for verification
+Phase: 04 (installation-platform) — EXECUTING
+Plan: 2 of 2
+Status: Ready to execute
 Last activity: 2026-04-08
 
 Progress: [████████████████████] 2/2 plans (100%)
@@ -59,6 +59,7 @@ Progress: [████████████████████] 2/2 pla
 | Phase 02-call-validation P03 | 10min | 2 tasks | 4 files |
 | Phase 03-secret-redaction P01 | 1min | 2 tasks | 2 files |
 | Phase 03-secret-redaction P02 | 3min | 2 tasks | 2 files |
+| Phase 04 P01 | 2min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -81,6 +82,7 @@ Recent decisions affecting current work:
 - [Phase 02-call-validation]: Validator gracefully degrades when DNS fails: stores call-ID without iptables rule (defense-in-depth)
 - [Phase 03-secret-redaction]: readFileSync per request for whitelist hot-reload, longest-first replacement ordering, accept-encoding stripped to prevent compressed responses
 - [Phase 03-secret-redaction]: Protocol-aware transport in proxy (http vs https) for testability; mock upstream pattern via node one-liner inside container
+- [Phase 04]: Source guard in install.sh for testability; whitelist symlink for user customization; set -a auto-export in CLI wrapper
 
 ### Pending Todos
 
@@ -94,6 +96,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-08T23:16:18.627Z
-Stopped at: Phase 4 context gathered
-Resume file: .planning/phases/04-installation-platform/04-CONTEXT.md
+Last session: 2026-04-08T23:38:24.020Z
+Stopped at: Completed 04-01-PLAN.md
+Resume file: None

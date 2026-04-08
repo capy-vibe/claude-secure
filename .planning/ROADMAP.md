@@ -80,7 +80,7 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 04-01-PLAN.md — Installer script (install.sh) and CLI wrapper (bin/claude-secure)
+- [x] 04-01-PLAN.md — Installer script (install.sh) and CLI wrapper (bin/claude-secure)
 - [ ] 04-02-PLAN.md — Integration tests for all INST and PLAT requirements
 
 ### Phase 5: Integration Testing

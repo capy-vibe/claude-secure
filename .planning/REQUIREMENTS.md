@@ -40,12 +40,12 @@
 
 ### Installation
 
-- [ ] **INST-01**: Installer script checks for required dependencies (docker, docker compose, curl, jq, uuidgen)
-- [ ] **INST-02**: Installer detects platform (native Linux vs WSL2) and handles differences
-- [ ] **INST-03**: Installer prompts for authentication method (API key or OAuth token) with OAuth as primary
-- [ ] **INST-04**: Installer configures workspace path and creates directory structure
-- [ ] **INST-05**: Installer builds Docker images and sets correct file permissions
-- [ ] **INST-06**: Installer creates `claude-secure` CLI shortcut for launching the environment
+- [x] **INST-01**: Installer script checks for required dependencies (docker, docker compose, curl, jq, uuidgen)
+- [x] **INST-02**: Installer detects platform (native Linux vs WSL2) and handles differences
+- [x] **INST-03**: Installer prompts for authentication method (API key or OAuth token) with OAuth as primary
+- [x] **INST-04**: Installer configures workspace path and creates directory structure
+- [x] **INST-05**: Installer builds Docker images and sets correct file permissions
+- [x] **INST-06**: Installer creates `claude-secure` CLI shortcut for launching the environment
 
 ### Testing
 
@@ -57,9 +57,9 @@
 
 ### Platform Support
 
-- [ ] **PLAT-01**: All containers build and run correctly on native Linux (Ubuntu 22.04+)
-- [ ] **PLAT-02**: All containers build and run correctly on WSL2 with Docker
-- [ ] **PLAT-03**: iptables rules function correctly on both Linux and WSL2 (with nftables backend detection)
+- [x] **PLAT-01**: All containers build and run correctly on native Linux (Ubuntu 22.04+)
+- [x] **PLAT-02**: All containers build and run correctly on WSL2 with Docker
+- [x] **PLAT-03**: iptables rules function correctly on both Linux and WSL2 (with nftables backend detection)
 
 ## v2 Requirements
 
@@ -121,20 +121,20 @@ Which phases cover which requirements. Updated during roadmap creation.
 | WHIT-01 | Phase 1 | Complete |
 | WHIT-02 | Phase 1 | Complete |
 | WHIT-03 | Phase 1 | Complete |
-| INST-01 | Phase 4 | Pending |
-| INST-02 | Phase 4 | Pending |
-| INST-03 | Phase 4 | Pending |
-| INST-04 | Phase 4 | Pending |
-| INST-05 | Phase 4 | Pending |
-| INST-06 | Phase 4 | Pending |
+| INST-01 | Phase 4 | Complete |
+| INST-02 | Phase 4 | Complete |
+| INST-03 | Phase 4 | Complete |
+| INST-04 | Phase 4 | Complete |
+| INST-05 | Phase 4 | Complete |
+| INST-06 | Phase 4 | Complete |
 | TEST-01 | Phase 5 | Pending |
 | TEST-02 | Phase 5 | Pending |
 | TEST-03 | Phase 5 | Pending |
 | TEST-04 | Phase 5 | Pending |
 | TEST-05 | Phase 5 | Pending |
-| PLAT-01 | Phase 4 | Pending |
-| PLAT-02 | Phase 4 | Pending |
-| PLAT-03 | Phase 4 | Pending |
+| PLAT-01 | Phase 4 | Complete |
+| PLAT-02 | Phase 4 | Complete |
+| PLAT-03 | Phase 4 | Complete |
 
 **Coverage:**
 - v1 requirements: 28 total
