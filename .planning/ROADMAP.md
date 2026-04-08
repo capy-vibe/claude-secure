@@ -51,7 +51,7 @@ Plans:
 Plans:
 - [x] 02-01-PLAN.md -- Docker Compose shared namespace + full validator service (SQLite, iptables)
 - [x] 02-02-PLAN.md -- PreToolUse hook implementation (domain extraction, whitelist, call-ID registration)
-- [ ] 02-03-PLAN.md -- Integration tests for all CALL requirements
+- [x] 02-03-PLAN.md -- Integration tests for all CALL requirements
 
 ### Phase 3: Secret Redaction
 **Goal**: Secrets in Claude's LLM context are never sent to Anthropic in cleartext, and Claude can still use real secret values in authorized tool calls

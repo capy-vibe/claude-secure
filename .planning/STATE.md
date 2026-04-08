@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Completed 02-02-PLAN.md
-last_updated: "2026-04-08T21:26:46.042Z"
+status: verifying
+stopped_at: Completed 02-03-PLAN.md
+last_updated: "2026-04-08T21:38:52.998Z"
 last_activity: 2026-04-08
 progress:
   total_phases: 5
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 5
-  completed_plans: 4
+  completed_plans: 5
   percent: 100
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-04-08)
 
 Phase: 02 (call-validation) — EXECUTING
 Plan: 3 of 3
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-04-08
 
 Progress: [████████████████████] 2/2 plans (100%)
@@ -56,6 +56,7 @@ Progress: [████████████████████] 2/2 pla
 | Phase 01 P02 | 4min | 2 tasks | 1 files |
 | Phase 02-call-validation P01 | 2min | 2 tasks | 3 files |
 | Phase 02-call-validation P02 | 1min | 1 tasks | 1 files |
+| Phase 02-call-validation P03 | 10min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -74,6 +75,8 @@ Recent decisions affecting current work:
 - [Phase 02-call-validation]: Shared network namespace via network_mode: service:claude for iptables enforcement
 - [Phase 02-call-validation]: iptables comment module with fallback for call-ID rule tracking
 - [Phase 02-call-validation]: Exit 0 with JSON permissionDecision deny for blocking (not exit 2) per verified Claude Code protocol
+- [Phase 02-call-validation]: Removed dns: 127.0.0.1 from docker-compose.yml -- internal network blocks external DNS forwarding, setting broke validator resolution
+- [Phase 02-call-validation]: Validator gracefully degrades when DNS fails: stores call-ID without iptables rule (defense-in-depth)
 
 ### Pending Todos
 
@@ -87,6 +90,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-08T21:26:46.039Z
-Stopped at: Completed 02-02-PLAN.md
+Last session: 2026-04-08T21:38:52.995Z
+Stopped at: Completed 02-03-PLAN.md
 Resume file: None
