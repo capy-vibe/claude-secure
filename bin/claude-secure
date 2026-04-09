@@ -35,9 +35,30 @@ case "${1:-}" in
     ;;
   status)
     docker compose ps
+    # Show Claude Code version if claude container is running
+    if docker compose ps --status running --format '{{.Service}}' | grep -q '^claude$'; then
+      echo ""
+      echo "Claude Code version: $(docker compose exec -T claude claude --version 2>/dev/null || echo 'unknown')"
+    fi
+    ;;
+  upgrade)
+    echo "Upgrading Claude Code to latest version..."
+    docker compose build --no-cache claude
+    echo "Upgrade complete. Restart with: claude-secure"
     ;;
   update)
     cd "$APP_DIR" && git pull && docker compose build
+    ;;
+  help|--help|-h)
+    echo "Usage: claude-secure [command]"
+    echo ""
+    echo "Commands:"
+    echo "  (none)     Start containers and open Claude Code session"
+    echo "  status     Show container status and Claude Code version"
+    echo "  stop       Stop all containers"
+    echo "  update     Pull latest claude-secure and rebuild"
+    echo "  upgrade    Rebuild claude image with latest Claude Code (--no-cache)"
+    echo "  help       Show this help message"
     ;;
   *)
     docker compose up -d
