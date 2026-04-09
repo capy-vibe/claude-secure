@@ -29,9 +29,20 @@ set +a
 export COMPOSE_FILE="$APP_DIR/docker-compose.yml"
 export WORKSPACE_PATH
 
+# Remove stale containers that docker compose can't manage
+# (caused by name conflicts after unclean shutdown or compose file changes)
+cleanup_containers() {
+  for name in claude-proxy claude-secure claude-validator; do
+    if docker inspect "$name" >/dev/null 2>&1; then
+      docker rm -f "$name" >/dev/null 2>&1 || true
+    fi
+  done
+}
+
 case "${1:-}" in
   stop)
     docker compose down
+    cleanup_containers
     ;;
   status)
     docker compose ps
@@ -83,6 +94,7 @@ case "${1:-}" in
     echo "  help       Show this help message"
     ;;
   *)
+    cleanup_containers
     docker compose up -d
     docker compose exec -it claude claude
     ;;

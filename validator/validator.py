@@ -145,6 +145,11 @@ def setup_default_iptables():
     # 3. Allow established/related (response traffic)
     _run_ipt("-A", "OUTPUT", "-m", "state", "--state", "ESTABLISHED,RELATED", "-j", "ACCEPT")
 
+    # 3b. Allow DNS to Docker embedded DNS (needed for domain resolution in call-ID registration)
+    _run_ipt("-A", "OUTPUT", "-d", "127.0.0.11", "-p", "udp", "--dport", "53", "-j", "ACCEPT")
+    _run_ipt("-A", "OUTPUT", "-d", "127.0.0.11", "-p", "tcp", "--dport", "53", "-j", "ACCEPT")
+    logger.info("DNS rule added for 127.0.0.11:53")
+
     # 4. Allow traffic to proxy on port 8080
     proxy_ip = resolve_domain("proxy")
     if proxy_ip:

@@ -1,10 +1,16 @@
 const http = require('http');
 const https = require('https');
+const net = require('net');
+const dns = require('dns');
 const fs = require('fs');
 
 const UPSTREAM = process.env.REAL_ANTHROPIC_BASE_URL || 'https://api.anthropic.com';
 const WHITELIST_PATH = process.env.WHITELIST_PATH || '/etc/claude-secure/whitelist.json';
 const warnedEnvVars = new Set();
+
+// External DNS resolver to bypass Docker network aliases (which map api.anthropic.com to this proxy)
+const externalResolver = new dns.Resolver();
+externalResolver.setServers(['8.8.8.8', '1.1.1.1']);
 
 function loadWhitelist() {
   try {
@@ -49,6 +55,19 @@ function applyReplacements(text, pairs) {
   return result;
 }
 
+function isDomainAllowed(domain, config) {
+  if (!config) return false;
+  for (const entry of config.secrets || []) {
+    for (const d of entry.allowed_domains || []) {
+      if (domain === d || domain.endsWith('.' + d)) return true;
+    }
+  }
+  for (const d of config.readonly_domains || []) {
+    if (domain === d || domain.endsWith('.' + d)) return true;
+  }
+  return false;
+}
+
 function prepareHeaders(incomingHeaders, bodyByteLength) {
   const headers = { ...incomingHeaders };
 
@@ -87,34 +106,49 @@ const server = http.createServer((req, res) => {
       return;
     }
 
+    // Detect forward proxy mode (full URL) vs reverse proxy mode (path only)
+    const isForwardProxy = req.url.startsWith('http://') || req.url.startsWith('https://');
+    const url = new URL(req.url, UPSTREAM);
+
+    // For forward proxy requests, validate domain against whitelist
+    if (isForwardProxy && !isDomainAllowed(url.hostname, config)) {
+      console.warn('Forward proxy blocked: ' + url.hostname + ' (not in whitelist)');
+      res.writeHead(403, { 'content-type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Forbidden', detail: 'Domain not in whitelist: ' + url.hostname }));
+      return;
+    }
+
     // Build replacement maps from config + env vars
     const { redactMap, restoreMap } = buildMaps(config);
 
     // Redact secrets in outbound request body (SECR-02)
-    const redactedBody = applyReplacements(body, redactMap);
+    // For forward proxy to external services, redaction prevents accidental secret leakage
+    const redactedBody = isForwardProxy ? body : applyReplacements(body, redactMap);
 
-    // Parse upstream URL
-    const url = new URL(req.url, UPSTREAM);
+    // Prepare headers: only inject proxy auth for Anthropic (reverse proxy) requests
+    const headers = isForwardProxy
+      ? { ...req.headers, host: url.host, 'content-length': String(Buffer.byteLength(redactedBody)) }
+      : prepareHeaders(req.headers, Buffer.byteLength(redactedBody));
+    if (!isForwardProxy) headers['host'] = url.host;
 
-    // Prepare headers with auth and recalculated Content-Length (SECR-05, D-10)
-    const headers = prepareHeaders(req.headers, Buffer.byteLength(redactedBody));
-    headers['host'] = url.host;
-
-    // Forward to upstream (Anthropic or test mock)
+    // Forward to upstream
     const isHttps = url.protocol === 'https:';
     const transport = isHttps ? https : http;
-    const upstreamReq = transport.request({
-      hostname: url.hostname,
-      port: url.port || (isHttps ? 443 : 80),
-      path: url.pathname + url.search,
-      method: req.method,
-      headers
-    }, upstreamRes => {
+
+    const doRequest = (resolvedHostname) => {
+      const upstreamReq = transport.request({
+        hostname: resolvedHostname,
+        port: url.port || (isHttps ? 443 : 80),
+        path: url.pathname + url.search,
+        method: req.method,
+        headers,
+        servername: url.hostname  // SNI must use original hostname for TLS
+      }, upstreamRes => {
       let responseBody = '';
       upstreamRes.on('data', chunk => { responseBody += chunk; });
       upstreamRes.on('end', () => {
-        // Restore placeholders to real values in response (SECR-03)
-        const restoredBody = applyReplacements(responseBody, restoreMap);
+        // Restore placeholders to real values in response (SECR-03, reverse proxy only)
+        const restoredBody = isForwardProxy ? responseBody : applyReplacements(responseBody, restoreMap);
 
         // Build response headers with recalculated Content-Length
         const resHeaders = { ...upstreamRes.headers };
@@ -126,15 +160,60 @@ const server = http.createServer((req, res) => {
       });
     });
 
-    upstreamReq.on('error', err => {
-      console.error('Upstream error:', err.message);
-      res.writeHead(502, { 'content-type': 'application/json' });
-      res.end(JSON.stringify({ error: 'Bad Gateway', detail: err.message }));
-    });
+      upstreamReq.on('error', err => {
+        console.error('Upstream error:', err.message);
+        res.writeHead(502, { 'content-type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Bad Gateway', detail: err.message }));
+      });
 
-    upstreamReq.write(redactedBody);
-    upstreamReq.end();
+      upstreamReq.write(redactedBody);
+      upstreamReq.end();
+    };
+
+    // For reverse proxy (Anthropic API): resolve via external DNS to bypass Docker alias
+    // For forward proxy: use hostname directly (already resolved correctly)
+    if (!isForwardProxy) {
+      externalResolver.resolve4(url.hostname, (err, addresses) => {
+        if (err || !addresses.length) {
+          console.error('DNS resolution failed for ' + url.hostname + ': ' + (err ? err.message : 'no addresses'));
+          res.writeHead(502, { 'content-type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Bad Gateway', detail: 'DNS resolution failed for ' + url.hostname }));
+          return;
+        }
+        doRequest(addresses[0]);
+      });
+    } else {
+      doRequest(url.hostname);
+    }
   });
+});
+
+// HTTPS CONNECT tunneling for forward proxy (HTTP_PROXY/HTTPS_PROXY)
+server.on('connect', (req, clientSocket, head) => {
+  const [hostname, port] = req.url.split(':');
+  const config = loadWhitelist();
+
+  if (!isDomainAllowed(hostname, config)) {
+    console.warn('CONNECT blocked: ' + hostname + ' (not in whitelist)');
+    clientSocket.write('HTTP/1.1 403 Forbidden\r\n\r\n');
+    clientSocket.end();
+    return;
+  }
+
+  const serverSocket = net.connect(parseInt(port) || 443, hostname, () => {
+    clientSocket.write('HTTP/1.1 200 Connection Established\r\n\r\n');
+    serverSocket.write(head);
+    serverSocket.pipe(clientSocket);
+    clientSocket.pipe(serverSocket);
+  });
+
+  serverSocket.on('error', err => {
+    console.error('CONNECT error to ' + hostname + ': ' + err.message);
+    clientSocket.write('HTTP/1.1 502 Bad Gateway\r\n\r\n');
+    clientSocket.end();
+  });
+
+  clientSocket.on('error', () => serverSocket.destroy());
 });
 
 const PORT = process.env.PROXY_PORT || 8080;

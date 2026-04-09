@@ -163,6 +163,7 @@ To add a new secret, add an entry to the `secrets` array with a unique placehold
 - All Linux capabilities dropped (`cap_drop: ALL`), `no-new-privileges` enforced
 - Workspace directory bind-mounted as a Docker volume
 - `ANTHROPIC_BASE_URL` points to the proxy (`http://proxy:8080`), so all API traffic routes through the redaction layer
+- `HTTP_PROXY` and `HTTPS_PROXY` set to `http://proxy:8080`, routing all outbound HTTP/HTTPS tool calls (curl, wget, WebFetch) through the proxy for domain validation and CONNECT tunneling
 - `NODE_TLS_REJECT_UNAUTHORIZED=0` set to accept the proxy's self-signed certificate for intercepted HTTPS calls
 - Telemetry, auto-updater, and error reporting disabled to prevent non-essential external connections
 - Onboarding flag pre-set (`hasCompletedOnboarding`) to skip startup checks that bypass `ANTHROPIC_BASE_URL`
@@ -172,9 +173,12 @@ To add a new secret, add an entry to the `secrets` array with a unique placehold
 ### proxy Container
 
 - Base image: Node.js 22 Slim
-- Zero npm dependencies -- uses only Node.js stdlib (`http`, `https`, `fs`)
+- Zero npm dependencies -- uses only Node.js stdlib (`http`, `https`, `net`, `dns`, `fs`)
 - Listens on HTTP port 8080 (for `ANTHROPIC_BASE_URL` traffic) and HTTPS port 443 with a self-signed certificate (for intercepted hardcoded calls)
 - Registered as a Docker network alias for `api.anthropic.com`, `statsig.anthropic.com`, and `sentry.anthropic.com` on the internal network -- Claude Code's hardcoded external calls resolve to the proxy instead of failing
+- Acts as a forward proxy for the claude container (`HTTP_PROXY`/`HTTPS_PROXY`), enabling outbound HTTPS connections to whitelisted domains via CONNECT tunneling
+- Validates CONNECT targets against the whitelist -- non-whitelisted domains are rejected with 403
+- Uses external DNS (8.8.8.8, 1.1.1.1) for upstream resolution to bypass Docker network aliases that would otherwise cause a DNS loop
 - Buffers entire request body, performs longest-first secret replacement, forwards to `api.anthropic.com`
 - Buffers entire response, restores placeholders to real values, returns to Claude
 - Strips `Accept-Encoding` to prevent compressed responses that cannot be scanned
@@ -189,6 +193,7 @@ To add a new secret, add an entry to the `secrets` array with a unique placehold
 - `GET /validate?call_id=X` -- checks if call-ID is valid and not expired
 - Background thread sweeps expired entries periodically
 - Shares network namespace with claude container (`network_mode: service:claude`) for direct iptables rule management
+- Allows DNS queries to Docker embedded DNS (127.0.0.11) for domain resolution during call-ID registration
 - Requires `NET_ADMIN` capability for iptables access
 
 ## Security Model
