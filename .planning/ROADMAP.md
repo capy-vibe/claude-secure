@@ -151,11 +151,15 @@ Plans:
 
 ### Phase 8: Container tooling -- full dev environment for claude-secure
 
-**Goal:** Developer workflow tooling: Makefile command surface, docker-compose.dev.yml with hot-reload, unified test runner, and ShellCheck linting for all bash scripts
+**Goal:** Claude container image includes a full development toolchain (git, build-essential, Python ecosystem, ripgrep, fd-find) so Claude Code can work productively on real projects inside the isolated environment
 **Requirements**: TOOL-01, TOOL-02, TOOL-03, TOOL-04
 **Depends on:** Phase 7
-**Plans:** 2 plans
+**Success Criteria** (what must be TRUE):
+  1. git, build-essential, ca-certificates, openssh-client, and wget are available in the claude container
+  2. python3, python3-pip, and python3-venv are available in the claude container
+  3. ripgrep (rg) and fd-find (fdfind) are available in the claude container
+  4. All new tools work as the non-root claude user and existing tools/security model are preserved
+**Plans:** 1 plan
 
 Plans:
-- [ ] 08-01-PLAN.md -- Makefile and docker-compose.dev.yml (dev command surface and hot-reload)
-- [ ] 08-02-PLAN.md -- Unified test runner and ShellCheck linting
+- [ ] 08-01-PLAN.md -- Expand Claude container Dockerfile with dev tools (git, build-essential, python3, ripgrep, fd-find)

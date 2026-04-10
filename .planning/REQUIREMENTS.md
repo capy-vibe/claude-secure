@@ -61,6 +61,13 @@
 - [x] **PLAT-02**: All containers build and run correctly on WSL2 with Docker
 - [x] **PLAT-03**: iptables rules function correctly on both Linux and WSL2 (with nftables backend detection)
 
+### Container Tooling
+
+- [ ] **TOOL-01**: Claude container includes core dev tools: git, build-essential, ca-certificates, openssh-client, wget
+- [ ] **TOOL-02**: Claude container includes Python ecosystem: python3, python3-pip, python3-venv
+- [ ] **TOOL-03**: Claude container includes fast search tools: ripgrep (rg), fd-find (fdfind)
+- [ ] **TOOL-04**: All new tools are accessible by the non-root claude user and do not break existing tools or security model
+
 ## v2 Requirements
 
 ### Streaming
@@ -135,12 +142,16 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PLAT-01 | Phase 4 | Complete |
 | PLAT-02 | Phase 4 | Complete |
 | PLAT-03 | Phase 4 | Complete |
+| TOOL-01 | Phase 8 | Pending |
+| TOOL-02 | Phase 8 | Pending |
+| TOOL-03 | Phase 8 | Pending |
+| TOOL-04 | Phase 8 | Pending |
 
 **Coverage:**
-- v1 requirements: 28 total
-- Mapped to phases: 28
+- v1 requirements: 32 total
+- Mapped to phases: 32
 - Unmapped: 0
 
 ---
 *Requirements defined: 2026-04-08*
-*Last updated: 2026-04-08 after roadmap creation*
+*Last updated: 2026-04-10 after Phase 8 scope update*
