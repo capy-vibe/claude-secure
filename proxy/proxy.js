@@ -44,6 +44,7 @@ function loadWhitelist() {
 function buildMaps(config) {
   const redactMap = [];
   const restoreMap = [];
+  const logPairs = [];
 
   for (const entry of config.secrets || []) {
     const realValue = process.env[entry.env_var];
@@ -56,13 +57,18 @@ function buildMaps(config) {
     }
     redactMap.push([realValue, entry.placeholder]);
     restoreMap.push([entry.placeholder, realValue]);
+    logPairs.push({
+      masked: realValue.slice(0, Math.min(8, Math.floor(realValue.length / 3))) + '...',
+      placeholder: entry.placeholder,
+      env_var: entry.env_var
+    });
   }
 
   // Sort by search string length, longest first to prevent partial match corruption
   redactMap.sort((a, b) => b[0].length - a[0].length);
   restoreMap.sort((a, b) => b[0].length - a[0].length);
 
-  return { redactMap, restoreMap };
+  return { redactMap, restoreMap, logPairs };
 }
 
 function applyReplacements(text, pairs) {
@@ -141,7 +147,12 @@ const server = http.createServer((req, res) => {
     }
 
     // Build replacement maps from config + env vars
-    const { redactMap, restoreMap } = buildMaps(config);
+    const { redactMap, restoreMap, logPairs } = buildMaps(config);
+
+    // Log active redaction mappings (masked prefixes only, never full secrets)
+    if (logPairs.length > 0) {
+      logJson('info', 'Active redaction mappings', { redaction_map: logPairs });
+    }
 
     // Redact secrets in outbound request body (SECR-02)
     // For forward proxy to external services, redaction prevents accidental secret leakage
