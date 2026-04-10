@@ -88,4 +88,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-10 after Phase 07 completion — Env-file strategy and dynamic secret loading via Docker Compose env_file*
+*Last updated: 2026-04-10 after Phase 08 completion — Full dev environment in Claude container (git, build-essential, Python, ripgrep, fd-find)*
