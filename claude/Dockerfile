@@ -2,7 +2,11 @@ FROM node:22-slim
 
 # Install claude-code CLI and required tools
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends curl jq uuid-runtime dnsutils && \
+    apt-get install -y --no-install-recommends \
+        curl jq uuid-runtime dnsutils \
+        git build-essential ca-certificates openssh-client wget \
+        python3 python3-pip python3-venv \
+        ripgrep fd-find && \
     rm -rf /var/lib/apt/lists/* && \
     npm install -g @anthropic-ai/claude-code
 
