@@ -9,40 +9,167 @@ if [ ! -f "$CONFIG_DIR/config.sh" ]; then
   exit 1
 fi
 
-if [ ! -f "$CONFIG_DIR/.env" ]; then
-  echo "ERROR: No auth credentials found. Run install.sh first." >&2
-  exit 1
-fi
-
-# Load configuration (provides APP_DIR, WORKSPACE_PATH, PLATFORM)
+# Load global config (APP_DIR, PLATFORM only)
 # shellcheck source=/dev/null
 source "$CONFIG_DIR/config.sh"
 
-# Load and auto-export auth credentials and secret env vars
-# set -a makes all subsequent variable assignments exported (required for docker compose)
-set -a
-# shellcheck source=/dev/null
-source "$CONFIG_DIR/.env"
-set +a
+# Auto-migrate single-instance layout to multi-instance (D-04)
+migrate_if_needed() {
+  if [ -f "$CONFIG_DIR/.env" ] && [ ! -d "$CONFIG_DIR/instances" ]; then
+    echo "Migrating single-instance config to multi-instance layout..."
+    mkdir -p "$CONFIG_DIR/instances/default"
+    mv "$CONFIG_DIR/.env" "$CONFIG_DIR/instances/default/.env"
+    # Copy whitelist from app source (it was a docker mount, not stored in CONFIG_DIR)
+    cp "$APP_DIR/config/whitelist.json" "$CONFIG_DIR/instances/default/whitelist.json"
+    # Extract WORKSPACE_PATH into instance config, keep APP_DIR+PLATFORM in global
+    grep '^WORKSPACE_PATH=' "$CONFIG_DIR/config.sh" > "$CONFIG_DIR/instances/default/config.sh" || true
+    local tmp
+    tmp=$(mktemp)
+    grep -v '^WORKSPACE_PATH=' "$CONFIG_DIR/config.sh" > "$tmp"
+    mv "$tmp" "$CONFIG_DIR/config.sh"
+    echo "Migration complete. Your existing setup is now instance 'default'."
+    echo "Use: claude-secure --instance default"
+  fi
+}
+migrate_if_needed
 
-# Set log directory for docker compose volume mount
-export LOG_DIR="$CONFIG_DIR/logs"
+# Parse --instance flag before anything else (D-01, D-03)
+INSTANCE=""
+ARGS=()
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --instance)
+      if [ -z "${2:-}" ]; then
+        echo "ERROR: --instance requires a name" >&2; exit 1
+      fi
+      INSTANCE="$2"; shift 2 ;;
+    *) ARGS+=("$1"); shift ;;
+  esac
+done
 
-# Set SECRETS_FILE for docker compose env_file directive (loads all secrets into proxy container)
-export SECRETS_FILE="$CONFIG_DIR/.env"
+# list and help don't need --instance
+FIRST_ARG="${ARGS[0]:-}"
+if [ "$FIRST_ARG" != "list" ] && [ "$FIRST_ARG" != "help" ] && [ "$FIRST_ARG" != "--help" ] && [ "$FIRST_ARG" != "-h" ]; then
+  if [ -z "$INSTANCE" ]; then
+    echo "ERROR: --instance NAME is required for all commands except 'list' and 'help'" >&2
+    echo "Usage: claude-secure --instance NAME [command] [flags]" >&2
+    exit 1
+  fi
+fi
 
-# Set COMPOSE_FILE so docker compose works from any directory
-export COMPOSE_FILE="$APP_DIR/docker-compose.yml"
-export WORKSPACE_PATH
+# Validate instance name (D-02)
+validate_instance_name() {
+  local name="$1"
+  if [[ ! "$name" =~ ^[a-z0-9][a-z0-9-]*$ ]]; then
+    echo "ERROR: Instance name must be DNS-safe (lowercase alphanumeric and hyphens, must start with letter or digit)" >&2
+    exit 1
+  fi
+  if [ ${#name} -gt 63 ]; then
+    echo "ERROR: Instance name must be 63 characters or less" >&2
+    exit 1
+  fi
+}
 
-# Remove stale containers that docker compose can't manage
-# (caused by name conflicts after unclean shutdown or compose file changes)
-cleanup_containers() {
-  for name in claude-proxy claude-secure claude-validator; do
-    if docker inspect "$name" >/dev/null 2>&1; then
-      docker rm -f "$name" >/dev/null 2>&1 || true
+if [ -n "$INSTANCE" ]; then
+  validate_instance_name "$INSTANCE"
+fi
+
+# Instance directory
+INSTANCE_DIR="$CONFIG_DIR/instances/$INSTANCE"
+
+# Auto-create instance on first use (D-09)
+create_instance() {
+  local name="$1"
+  local idir="$CONFIG_DIR/instances/$name"
+  echo "Instance '$name' not found. Creating..."
+  read -rp "Workspace path [$HOME/claude-workspace-$name]: " ws_path
+  ws_path="${ws_path:-$HOME/claude-workspace-$name}"
+  ws_path="$(realpath -m "$ws_path")"
+  mkdir -p "$ws_path"
+  mkdir -p "$idir"
+  echo "WORKSPACE_PATH=\"$ws_path\"" > "$idir/config.sh"
+  # Copy whitelist template from app
+  cp "$APP_DIR/config/whitelist.json" "$idir/whitelist.json"
+  # Copy auth from existing instance or prompt
+  local existing_env=""
+  for d in "$CONFIG_DIR/instances"/*/; do
+    if [ -f "$d/.env" ] && [ "$d" != "$idir/" ]; then
+      existing_env="$d/.env"
+      break
     fi
   done
+  if [ -n "$existing_env" ]; then
+    read -rp "Copy auth credentials from $(basename "$(dirname "$existing_env")")? [Y/n]: " copy_auth
+    if [[ "${copy_auth:-y}" =~ ^[Yy]$ ]]; then
+      cp "$existing_env" "$idir/.env"
+      echo "Auth credentials copied. Edit $idir/.env to customize secrets."
+    else
+      setup_instance_auth "$idir"
+    fi
+  else
+    setup_instance_auth "$idir"
+  fi
+  echo "Instance '$name' created."
+}
+
+setup_instance_auth() {
+  local idir="$1"
+  echo "Choose authentication method:"
+  echo "  1) OAuth token [recommended]"
+  echo "  2) API key"
+  read -rp "Choice [1]: " auth_choice
+  auth_choice="${auth_choice:-1}"
+  case "$auth_choice" in
+    2)
+      read -rsp "API key: " key; echo ""
+      echo "ANTHROPIC_API_KEY=${key}" > "$idir/.env"
+      ;;
+    *)
+      echo "Run 'claude setup-token' first to get your OAuth token."
+      read -rsp "OAuth token: " token; echo ""
+      echo "CLAUDE_CODE_OAUTH_TOKEN=${token}" > "$idir/.env"
+      ;;
+  esac
+  echo "" >> "$idir/.env"
+  echo "# Add secrets below (must match env_var in whitelist.json)" >> "$idir/.env"
+  echo "# Example: GITHUB_TOKEN=ghp_your_token_here" >> "$idir/.env"
+  chmod 600 "$idir/.env"
+}
+
+# Auto-create if instance specified but doesn't exist (skip for stop/remove/list/help)
+if [ -n "$INSTANCE" ] && [ ! -d "$INSTANCE_DIR" ]; then
+  if [ "$FIRST_ARG" = "stop" ] || [ "$FIRST_ARG" = "remove" ]; then
+    echo "ERROR: Instance '$INSTANCE' does not exist." >&2
+    exit 1
+  fi
+  create_instance "$INSTANCE"
+fi
+
+# Load instance config and set env vars
+if [ -n "$INSTANCE" ]; then
+  # Load instance config (WORKSPACE_PATH)
+  # shellcheck source=/dev/null
+  source "$INSTANCE_DIR/config.sh"
+
+  # Load and auto-export instance secrets
+  set -a
+  # shellcheck source=/dev/null
+  source "$INSTANCE_DIR/.env"
+  set +a
+
+  # Set compose and instance variables
+  export COMPOSE_PROJECT_NAME="claude-${INSTANCE}"
+  export COMPOSE_FILE="$APP_DIR/docker-compose.yml"
+  export WORKSPACE_PATH
+  export SECRETS_FILE="$INSTANCE_DIR/.env"
+  export WHITELIST_PATH="$INSTANCE_DIR/whitelist.json"
+  export LOG_DIR="$CONFIG_DIR/logs"
+  export LOG_PREFIX="${INSTANCE}-"
+fi
+
+# Use docker compose project-scoped cleanup instead of hardcoded names
+cleanup_containers() {
+  docker compose down --remove-orphans 2>/dev/null || true
 }
 
 # Parse log flags from arguments, export env vars for docker compose
@@ -56,6 +183,7 @@ parse_log_flags() {
     case "$arg" in
       log:hook)       LOG_HOOK=1 ;;
       log:anthropic)  LOG_ANTHROPIC=1 ;;
+      log:bodies)     LOG_ANTHROPIC=1; LOG_BODIES=1 ;;
       log:iptables)   LOG_IPTABLES=1 ;;
       log:all)        LOG_HOOK=1; LOG_ANTHROPIC=1; LOG_IPTABLES=1 ;;
       *)              REMAINING_ARGS+=("$arg") ;;
@@ -63,10 +191,11 @@ parse_log_flags() {
   done
 
   export LOG_HOOK LOG_ANTHROPIC LOG_IPTABLES
+  export LOG_BODIES="${LOG_BODIES:-0}"
 }
 
-# Parse log flags from all arguments
-parse_log_flags "$@"
+# Parse log flags from instance-scoped arguments
+parse_log_flags "${ARGS[@]}"
 
 # Use first non-log-flag argument as command
 CMD="${REMAINING_ARGS[0]:-}"
@@ -74,7 +203,6 @@ CMD="${REMAINING_ARGS[0]:-}"
 case "$CMD" in
   stop)
     docker compose down
-    cleanup_containers
     ;;
   status)
     docker compose ps
@@ -88,7 +216,7 @@ case "$CMD" in
     echo "Upgrading Claude Code to latest version..."
     docker compose build --no-cache --pull claude
     echo ""
-    echo "Upgrade complete. Restart with: claude-secure"
+    echo "Upgrade complete. Restart with: claude-secure --instance $INSTANCE"
     ;;
   update)
     echo "Pulling latest changes..."
@@ -112,56 +240,105 @@ case "$CMD" in
       fi
     fi
     echo ""
-    echo "Update complete. Restart with: claude-secure"
+    echo "Update complete. Restart with: claude-secure --instance $INSTANCE"
+    ;;
+  list)
+    printf "%-20s %-10s %s\n" "INSTANCE" "STATUS" "WORKSPACE"
+    printf "%-20s %-10s %s\n" "--------" "------" "---------"
+    # Get running compose projects
+    declare -A running_projects
+    while IFS= read -r line; do
+      name=$(echo "$line" | jq -r '.Name // empty' 2>/dev/null)
+      [ -n "$name" ] && running_projects["$name"]=1
+    done < <(docker compose ls --format json 2>/dev/null | jq -c '.[]?' 2>/dev/null)
+    # Show all configured instances
+    if [ -d "$CONFIG_DIR/instances" ]; then
+      for idir in "$CONFIG_DIR/instances"/*/; do
+        [ -d "$idir" ] || continue
+        name=$(basename "$idir")
+        ws=$(grep '^WORKSPACE_PATH=' "$idir/config.sh" 2>/dev/null | cut -d'"' -f2)
+        project="claude-${name}"
+        if [ -n "${running_projects[$project]:-}" ]; then
+          status="running"
+        else
+          status="stopped"
+        fi
+        printf "%-20s %-10s %s\n" "$name" "$status" "$ws"
+      done
+    else
+      echo "No instances configured."
+    fi
+    ;;
+  remove)
+    if [ -z "$INSTANCE" ]; then
+      echo "ERROR: --instance NAME is required for remove" >&2; exit 1
+    fi
+    echo "This will stop containers and delete config for instance '$INSTANCE'."
+    read -rp "Are you sure? [y/N]: " confirm
+    if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
+      echo "Cancelled."; exit 0
+    fi
+    # Stop containers
+    docker compose down --remove-orphans 2>/dev/null || true
+    # Remove instance config
+    rm -rf "$INSTANCE_DIR"
+    echo "Instance '$INSTANCE' removed."
+    echo "Note: Docker volumes (workspace, validator-db) are preserved."
+    echo "Run 'docker volume ls | grep claude-${INSTANCE}' to see them."
     ;;
   logs)
     LOG_SVC="${REMAINING_ARGS[1]:-}"
     case "$LOG_SVC" in
-      hook)       tail -f "$LOG_DIR/hook.jsonl" 2>/dev/null ;;
-      anthropic)  tail -f "$LOG_DIR/anthropic.jsonl" 2>/dev/null ;;
-      iptables)   tail -f "$LOG_DIR/iptables.jsonl" 2>/dev/null ;;
+      hook)       tail -f "$LOG_DIR/${LOG_PREFIX}hook.jsonl" 2>/dev/null ;;
+      anthropic)  tail -f "$LOG_DIR/${LOG_PREFIX}anthropic.jsonl" 2>/dev/null ;;
+      iptables)   tail -f "$LOG_DIR/${LOG_PREFIX}iptables.jsonl" 2>/dev/null ;;
       clear)
-        rm -f "$LOG_DIR"/*.jsonl
-        echo "Logs cleared."
+        rm -f "$LOG_DIR/${LOG_PREFIX}"*.jsonl
+        echo "Logs cleared for instance '$INSTANCE'."
         ;;
       "")
-        # Guard against unmatched glob when no .jsonl files exist yet
         shopt -s nullglob
-        LOG_FILES=("$LOG_DIR"/*.jsonl)
+        LOG_FILES=("$LOG_DIR/${LOG_PREFIX}"*.jsonl)
         shopt -u nullglob
         if [ ${#LOG_FILES[@]} -eq 0 ]; then
-          echo "No log files found in $LOG_DIR. Start services with log:* flags first."
+          echo "No log files found for instance '$INSTANCE'. Start services with log:* flags first."
           exit 0
         fi
         tail -f "${LOG_FILES[@]}"
         ;;
       *)
         echo "Unknown log service: $LOG_SVC"
-        echo "Usage: claude-secure logs [hook|anthropic|iptables|clear]"
+        echo "Usage: claude-secure --instance NAME logs [hook|anthropic|iptables|clear]"
         exit 1
         ;;
     esac
     ;;
   help|--help|-h)
-    echo "Usage: claude-secure [command] [log:hook] [log:anthropic] [log:iptables] [log:all]"
+    echo "Usage: claude-secure --instance NAME [command] [log flags]"
+    echo "       claude-secure list"
     echo ""
     echo "Commands:"
     echo "  (none)     Start containers and open Claude Code session"
     echo "  status     Show container status and Claude Code version"
-    echo "  stop       Stop all containers"
-    echo "  logs       Tail all log files (logs hook|anthropic|iptables for specific service)"
+    echo "  stop       Stop all containers for this instance"
+    echo "  remove     Remove instance config (stops containers first)"
+    echo "  list       List all instances and their status"
+    echo "  logs       Tail log files (logs hook|anthropic|iptables|clear)"
     echo "  update     Pull latest claude-secure and rebuild all images"
     echo "  upgrade    Rebuild claude image with latest Claude Code (--no-cache)"
     echo "  help       Show this help message"
     echo ""
     echo "Log flags (append to any command):"
     echo "  log:hook       Enable hook script logging"
-    echo "  log:anthropic  Enable proxy logging"
+    echo "  log:anthropic  Enable proxy logging (metadata only)"
+    echo "  log:bodies     Enable proxy logging with full request/response bodies"
     echo "  log:iptables   Enable validator/iptables logging"
-    echo "  log:all        Enable all logging"
+    echo "  log:all        Enable all logging (metadata, no bodies)"
+    echo ""
+    echo "Instance names must be DNS-safe (lowercase alphanumeric and hyphens)."
+    echo "New instances are auto-created on first use."
     ;;
   *)
-    # Ensure log directory exists before docker compose up (pitfall 5)
     mkdir -p "$LOG_DIR"
     # 777 required: three containers write as different UIDs (claude:1001, node:1000, root:0)
     chmod 777 "$LOG_DIR"
