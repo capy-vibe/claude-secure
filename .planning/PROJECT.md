@@ -30,6 +30,7 @@ No secret ever leaves the isolated environment uncontrolled — every outbound c
 - [ ] Call-IDs are single-use and time-limited (10-second expiry)
 
 - [ ] Integration tests that verify blocked/allowed call scenarios end-to-end in Docker
+- [x] Multi-instance support: `--instance NAME` flag, auto-creation, DNS-safe validation, list/remove commands, instance-scoped config and logs — *Validated in Phase 09: multi-instance-support*
 
 ### Out of Scope
 
@@ -38,7 +39,6 @@ No secret ever leaves the isolated environment uncontrolled — every outbound c
 - WSL2 NFQUEUE kernel-level packet inspection — using iptables + HTTP validator instead
 - `claude-secure config` CLI tool — Phase 3 comfort feature
 - Automatic OAuth token refresh — Phase 3
-- Multi-project/workspace support — Phase 3
 - Audit log dashboard — Phase 3
 - macOS support — not in scope for this milestone
 - Secret detection in indirect file references Claude sends via `@file` to Anthropic — documented known gap, accepted risk
@@ -88,4 +88,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-10 after Phase 08 completion — Full dev environment in Claude container (git, build-essential, Python, ripgrep, fd-find)*
+*Last updated: 2026-04-10 after Phase 09 completion — Multi-instance support with --instance flag, auto-creation, and instance-scoped configuration*
