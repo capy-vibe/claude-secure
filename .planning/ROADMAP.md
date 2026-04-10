@@ -66,8 +66,8 @@ Plans:
 **Plans:** 2/2 plans complete
 
 Plans:
-- [x] 03-01-PLAN.md — Implement secret-redacting proxy and configure auth env vars in docker-compose
-- [x] 03-02-PLAN.md — Integration tests for all SECR requirements
+- [x] 03-01-PLAN.md -- Implement secret-redacting proxy and configure auth env vars in docker-compose
+- [x] 03-02-PLAN.md -- Integration tests for all SECR requirements
 
 ### Phase 4: Installation & Platform
 **Goal**: A developer can install claude-secure with a single script and launch it with a single command on Linux or WSL2
@@ -81,8 +81,8 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [x] 04-01-PLAN.md — Installer script (install.sh) and CLI wrapper (bin/claude-secure)
-- [x] 04-02-PLAN.md — Integration tests for all INST and PLAT requirements
+- [x] 04-01-PLAN.md -- Installer script (install.sh) and CLI wrapper (bin/claude-secure)
+- [x] 04-02-PLAN.md -- Integration tests for all INST and PLAT requirements
 
 ### Phase 5: Integration Testing
 **Goal**: Every security claim made by claude-secure is verified by automated tests that run in the actual Docker environment
@@ -96,8 +96,8 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 05-01-PLAN.md — TBD
-- [ ] 05-02-PLAN.md — TBD
+- [ ] 05-01-PLAN.md -- TBD
+- [ ] 05-02-PLAN.md -- TBD
 
 ## Progress
 
@@ -128,6 +128,33 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 **Plans:** 3 plans
 
 Plans:
-- [x] 06-01-PLAN.md — Service logging: add structured JSON logging to hook, proxy, and validator with docker-compose env vars and volume mounts
-- [x] 06-02-PLAN.md — CLI integration: log flag parsing, LOG_DIR export, logs subcommand, installer log directory
-- [x] 06-03-PLAN.md — Integration tests for all LOG requirements
+- [x] 06-01-PLAN.md -- Service logging: add structured JSON logging to hook, proxy, and validator with docker-compose env vars and volume mounts
+- [x] 06-02-PLAN.md -- CLI integration: log flag parsing, LOG_DIR export, logs subcommand, installer log directory
+- [x] 06-03-PLAN.md -- Integration tests for all LOG requirements
+
+### Phase 7: Env-file strategy and secret loading for claude-secure
+
+**Goal:** Docker Compose env_file directive replaces hardcoded secret env var names in docker-compose.yml, making secret loading fully dynamic -- adding a new secret requires editing only .env and whitelist.json
+**Requirements**: ENV-01, ENV-02, ENV-03, ENV-04, ENV-05
+**Depends on:** Phase 6
+**Success Criteria** (what must be TRUE):
+  1. Secrets from ~/.claude-secure/.env are available in the proxy container via env_file
+  2. Adding a new secret to .env + whitelist.json works without editing docker-compose.yml
+  3. Claude container does NOT have secret env vars (only auth tokens)
+  4. Proxy still redacts secrets correctly with env_file loading
+  5. System works when no optional secrets are configured (only auth)
+**Plans:** 2 plans
+
+Plans:
+- [ ] 07-01-PLAN.md -- Dynamic secret loading: env_file on proxy, SECRETS_FILE export, installer guidance
+- [ ] 07-02-PLAN.md -- Integration tests for all ENV requirements
+
+### Phase 8: Container tooling -- full dev environment for claude-secure
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 7
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 8 to break down)
