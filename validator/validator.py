@@ -27,6 +27,28 @@ CLEANUP_INTERVAL_SECONDS = 5
 
 logger = logging.getLogger("validator")
 
+
+class JsonFileHandler(logging.Handler):
+    """Writes JSON-formatted log entries to a JSONL file."""
+
+    def __init__(self, filepath):
+        super().__init__()
+        self.filepath = filepath
+
+    def emit(self, record):
+        try:
+            entry = json.dumps({
+                "ts": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "svc": "iptables",
+                "level": record.levelname.lower(),
+                "msg": record.getMessage(),
+            })
+            with open(self.filepath, "a") as f:
+                f.write(entry + "\n")
+        except Exception:
+            pass
+
+
 # ---------------------------------------------------------------------------
 # Database helpers
 # ---------------------------------------------------------------------------
@@ -340,6 +362,11 @@ if __name__ == "__main__":
         level=logging.INFO,
         format="%(asctime)s %(levelname)s %(message)s",
     )
+
+    if os.environ.get("LOG_IPTABLES") == "1":
+        json_handler = JsonFileHandler("/var/log/claude-secure/iptables.jsonl")
+        logger.addHandler(json_handler)
+        logger.info("JSON file logging enabled: /var/log/claude-secure/iptables.jsonl")
 
     # Initialize database
     init_db()
