@@ -146,8 +146,8 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 07-01-PLAN.md -- Dynamic secret loading: env_file on proxy, SECRETS_FILE export, installer guidance
-- [ ] 07-02-PLAN.md -- Integration tests for all ENV requirements
+- [x] 07-01-PLAN.md -- Dynamic secret loading: env_file on proxy, SECRETS_FILE export, installer guidance
+- [x] 07-02-PLAN.md -- Integration tests for all ENV requirements
 
 ### Phase 8: Container tooling -- full dev environment for claude-secure
 
