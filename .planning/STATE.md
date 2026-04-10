@@ -101,7 +101,7 @@ Recent decisions affecting current work:
 ### Pending Todos
 
 - **iptables packet-level logging**: Add iptables `-j LOG` rules for DROP/ACCEPT and poll `dmesg`/`/proc/kmsg` from validator background thread to capture actual packet allow/block events into `iptables.jsonl`. Currently only HTTP-level events (registration, validation) are logged — silent drops at the network layer are invisible.
-- **Remove unused .env file**: The root `.env` file is not used — project uses `.claude-secret/.env` on the host. Check references and delete.
+- ~~**Remove unused .env file**~~: Working on it now
 
 ### Blockers/Concerns
 
