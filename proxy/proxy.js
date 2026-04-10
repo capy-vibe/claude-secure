@@ -8,7 +8,8 @@ const UPSTREAM = process.env.REAL_ANTHROPIC_BASE_URL || 'https://api.anthropic.c
 const WHITELIST_PATH = process.env.WHITELIST_PATH || '/etc/claude-secure/whitelist.json';
 const warnedEnvVars = new Set();
 
-const LOG_PATH = '/var/log/claude-secure/anthropic.jsonl';
+const LOG_PREFIX = process.env.LOG_PREFIX || '';
+const LOG_PATH = `/var/log/claude-secure/${LOG_PREFIX}anthropic.jsonl`;
 const LOG_ENABLED = process.env.LOG_ANTHROPIC === '1';
 
 function logJson(level, msg, extra) {

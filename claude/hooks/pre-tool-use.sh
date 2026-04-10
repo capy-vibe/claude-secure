@@ -7,7 +7,7 @@ set -euo pipefail
 # Constants
 WHITELIST="/etc/claude-secure/whitelist.json"
 VALIDATOR_URL="http://127.0.0.1:8088"
-LOG_FILE="/var/log/claude-secure/hook.log"
+LOG_FILE="/var/log/claude-secure/${LOG_PREFIX:-}hook.log"
 
 # Capture stdin immediately (single-read stream -- must be first operational line)
 INPUT=$(cat)
@@ -32,7 +32,7 @@ log_json() {
       --arg tool "${TOOL_NAME:-}" \
       --arg domain "${DOMAIN:-}" \
       '{ts: $ts, svc: $svc, level: $level, action: $action, msg: $msg, tool: $tool, domain: $domain}' \
-      >> "/var/log/claude-secure/hook.jsonl" 2>/dev/null || true
+      >> "/var/log/claude-secure/${LOG_PREFIX:-}hook.jsonl" 2>/dev/null || true
   fi
 }
 

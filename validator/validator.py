@@ -364,9 +364,10 @@ if __name__ == "__main__":
     )
 
     if os.environ.get("LOG_IPTABLES") == "1":
-        json_handler = JsonFileHandler("/var/log/claude-secure/iptables.jsonl")
+        log_prefix = os.environ.get("LOG_PREFIX", "")
+        json_handler = JsonFileHandler(f"/var/log/claude-secure/{log_prefix}iptables.jsonl")
         logger.addHandler(json_handler)
-        logger.info("JSON file logging enabled: /var/log/claude-secure/iptables.jsonl")
+        logger.info(f"JSON file logging enabled: /var/log/claude-secure/{log_prefix}iptables.jsonl")
 
     # Initialize database
     init_db()
