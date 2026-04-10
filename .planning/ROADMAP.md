@@ -151,10 +151,11 @@ Plans:
 
 ### Phase 8: Container tooling -- full dev environment for claude-secure
 
-**Goal:** [To be planned]
-**Requirements**: TBD
+**Goal:** Developer workflow tooling: Makefile command surface, docker-compose.dev.yml with hot-reload, unified test runner, and ShellCheck linting for all bash scripts
+**Requirements**: TOOL-01, TOOL-02, TOOL-03, TOOL-04
 **Depends on:** Phase 7
-**Plans:** 0 plans
+**Plans:** 2 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 8 to break down)
+- [ ] 08-01-PLAN.md -- Makefile and docker-compose.dev.yml (dev command surface and hot-reload)
+- [ ] 08-02-PLAN.md -- Unified test runner and ShellCheck linting
