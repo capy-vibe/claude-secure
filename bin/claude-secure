@@ -28,6 +28,9 @@ set +a
 # Set log directory for docker compose volume mount
 export LOG_DIR="$CONFIG_DIR/logs"
 
+# Set SECRETS_FILE for docker compose env_file directive (loads all secrets into proxy container)
+export SECRETS_FILE="$CONFIG_DIR/.env"
+
 # Set COMPOSE_FILE so docker compose works from any directory
 export COMPOSE_FILE="$APP_DIR/docker-compose.yml"
 export WORKSPACE_PATH
