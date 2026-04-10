@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Completed 06-03-PLAN.md
-last_updated: "2026-04-10T07:11:59.922Z"
-last_activity: 2026-04-10
+status: verifying
+stopped_at: Completed quick-260409-fof
+last_updated: "2026-04-08T23:54:14.106Z"
+last_activity: 2026-04-08
 progress:
-  total_phases: 6
-  completed_phases: 5
-  total_plans: 12
-  completed_plans: 12
+  total_phases: 5
+  completed_phases: 4
+  total_plans: 9
+  completed_plans: 9
   percent: 100
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-09)
 
 **Core value:** No secret ever leaves the isolated environment uncontrolled -- every outbound call is validated, every secret in LLM context is redacted, and Claude Code cannot bypass the security layers.
-**Current focus:** Phase 06 — service-logging
+**Current focus:** Phase 04 — installation-platform
 
 ## Current Position
 
-Phase: 06 (service-logging) — EXECUTING
-Plan: 2 of 3
-Status: Ready to execute
-Last activity: 2026-04-10
+Phase: 5
+Plan: Not started
+Status: Phase complete — ready for verification
+Last activity: 2026-04-08
 
 Progress: [████████████████████] 2/2 plans (100%)
 
@@ -61,9 +61,6 @@ Progress: [████████████████████] 2/2 pla
 | Phase 03-secret-redaction P02 | 3min | 2 tasks | 2 files |
 | Phase 04 P01 | 2min | 2 tasks | 2 files |
 | Phase 04 P02 | 2min | 1 tasks | 1 files |
-| Phase 06-service-logging P01 | 3min | 3 tasks | 4 files |
-| Phase 06-service-logging P02 | 1min | 2 tasks | 2 files |
-| Phase 06-service-logging P03 | 2min | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -88,16 +85,10 @@ Recent decisions affecting current work:
 - [Phase 03-secret-redaction]: Protocol-aware transport in proxy (http vs https) for testability; mock upstream pattern via node one-liner inside container
 - [Phase 04]: Source guard in install.sh for testability; whitelist symlink for user customization; set -a auto-export in CLI wrapper
 - [Phase 04]: 12 tests covering 9 requirement IDs with subshell isolation and temp dir cleanup
-- [Phase 06-service-logging]: JSONL structured logging with env-var toggle pattern (LOG_*=1), jq -nc for shell JSON, Python logging.Handler subclass for validator
-- [Phase 06-service-logging]: chmod 755 for logs directory (not 777) for security-conscious default
 
 ### Pending Todos
 
 None yet.
-
-### Roadmap Evolution
-
-- Phase 6 added: Service Logging — per-service logging (hook, proxy, iptables) with unified host-side log file
 
 ### Blockers/Concerns
 
@@ -111,10 +102,11 @@ None yet.
 |---|-------------|------|--------|-----------|
 | 260409-2jp | Write a README.md for the claude-secure project | 2026-04-08 | 8fc85b6 | [260409-2jp-write-a-readme-md-for-the-claude-secure-](./quick/260409-2jp-write-a-readme-md-for-the-claude-secure-/) |
 | 260409-fof | Add Claude Code version update mechanism | 2026-04-09 | e780bf4 | [260409-fof-add-claude-code-version-update-mechanism](./quick/260409-fof-add-claude-code-version-update-mechanism/) |
+| 260410-fjy | Update README with logging features and verify update instructions | 2026-04-10 | c332c78 | [260410-fjy-update-readme-with-logging-features-and-](./quick/260410-fjy-update-readme-with-logging-features-and-/) |
 
 ## Session Continuity
 
-Last session: 2026-04-10T07:11:59.920Z
-Last activity: 2026-04-10 - Phase 06 Wave 1 complete (06-01, 06-02)
-Stopped at: Completed 06-03-PLAN.md
+Last session: 2026-04-10T09:14:13Z
+Last activity: 2026-04-10 - Completed quick task 260410-fjy: Update README with logging features
+Stopped at: Completed quick-260410-fjy
 Resume file: None

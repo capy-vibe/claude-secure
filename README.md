@@ -154,6 +154,67 @@ The whitelist is re-read on every request -- no container restart is needed afte
 
 To add a new secret, add an entry to the `secrets` array with a unique placeholder, the environment variable name, and the domains that need it. Set the environment variable in `~/.claude-secure/.env`.
 
+## Logging
+
+All three services (hook, proxy, validator) support structured JSONL logging. Logging is disabled by default and enabled via environment variable toggles, so there is zero overhead unless you opt in.
+
+### Enabling Logs
+
+Append log flags to any `claude-secure` command:
+
+```bash
+# Enable specific service logging
+claude-secure log:hook         # Enable hook script logging
+claude-secure log:anthropic    # Enable proxy logging
+claude-secure log:iptables     # Enable validator/iptables logging
+
+# Enable all logging at once
+claude-secure log:all
+
+# Flags combine with commands
+claude-secure log:all          # Start with all logging enabled
+claude-secure log:hook log:anthropic  # Enable hook + proxy only
+```
+
+### Log Format
+
+Each service writes structured JSONL (one JSON object per line) with four standard fields:
+
+```json
+{"ts":"2026-04-10T12:00:00.000Z","svc":"hook","level":"info","msg":"allow domain=github.com tool=Bash"}
+```
+
+| Field   | Description                                  |
+|---------|----------------------------------------------|
+| `ts`    | ISO 8601 timestamp (UTC)                     |
+| `svc`   | Service name: `hook`, `anthropic`, `iptables`|
+| `level` | Log level: `info`, `warning`, `error`        |
+| `msg`   | Human-readable event description             |
+
+### Viewing Logs
+
+Use the `logs` subcommand to tail log files in real time:
+
+```bash
+claude-secure logs              # Tail all log files
+claude-secure logs hook         # Tail hook logs only
+claude-secure logs anthropic    # Tail proxy logs only
+claude-secure logs iptables     # Tail validator logs only
+claude-secure logs clear        # Delete all log files
+```
+
+### Log Location
+
+Log files are stored at `~/.claude-secure/logs/`:
+
+- `hook.jsonl` -- PreToolUse hook decisions (allow, deny, register)
+- `anthropic.jsonl` -- Proxy request metadata (method, path, status, duration, redaction count)
+- `iptables.jsonl` -- Validator call-ID registration and iptables rule events
+
+### Security Note
+
+Proxy logs never include request or response bodies. Since bodies may contain secrets before redaction, only metadata (HTTP method, path, status code, duration, and redaction count) is logged. This ensures that enabling logging does not create a secondary channel for secret exposure.
+
 ## Architecture Details
 
 ### claude Container
