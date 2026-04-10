@@ -1,7 +1,7 @@
 {
   "secrets": [
     {
-      "placeholder": "PLACEHOLDER_GITHUB",
+      "placeholder": "REDACTED_GITHUB_TOKEN",
       "env_var": "GITHUB_TOKEN",
       "allowed_domains": ["github.com", "api.github.com", "raw.githubusercontent.com"]
     },

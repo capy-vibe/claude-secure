@@ -192,14 +192,8 @@ copy_app_files() {
   # Append APP_DIR to config.sh
   echo "APP_DIR=\"$app_dir\"" >> "$CONFIG_DIR/config.sh"
 
-  # Copy default whitelist if not exists
-  if [ ! -f "$CONFIG_DIR/whitelist.json" ]; then
-    cp "$app_dir/config/whitelist.json" "$CONFIG_DIR/whitelist.json"
-    log_info "Copied default whitelist.json"
-  fi
-
-  # Symlink so docker-compose.yml's relative mount reads the user's copy
-  ln -sf "$CONFIG_DIR/whitelist.json" "$app_dir/config/whitelist.json"
+  # Whitelist lives at config/whitelist.json in the repo (single source of truth).
+  # Docker Compose mounts it directly — no copy needed.
 }
 
 build_images() {
