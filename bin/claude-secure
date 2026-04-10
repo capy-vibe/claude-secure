@@ -25,6 +25,9 @@ set -a
 source "$CONFIG_DIR/.env"
 set +a
 
+# Set log directory for docker compose volume mount
+export LOG_DIR="$CONFIG_DIR/logs"
+
 # Set COMPOSE_FILE so docker compose works from any directory
 export COMPOSE_FILE="$APP_DIR/docker-compose.yml"
 export WORKSPACE_PATH
@@ -39,7 +42,33 @@ cleanup_containers() {
   done
 }
 
-case "${1:-}" in
+# Parse log flags from arguments, export env vars for docker compose
+parse_log_flags() {
+  LOG_HOOK=0
+  LOG_ANTHROPIC=0
+  LOG_IPTABLES=0
+  REMAINING_ARGS=()
+
+  for arg in "$@"; do
+    case "$arg" in
+      log:hook)       LOG_HOOK=1 ;;
+      log:anthropic)  LOG_ANTHROPIC=1 ;;
+      log:iptables)   LOG_IPTABLES=1 ;;
+      log:all)        LOG_HOOK=1; LOG_ANTHROPIC=1; LOG_IPTABLES=1 ;;
+      *)              REMAINING_ARGS+=("$arg") ;;
+    esac
+  done
+
+  export LOG_HOOK LOG_ANTHROPIC LOG_IPTABLES
+}
+
+# Parse log flags from all arguments
+parse_log_flags "$@"
+
+# Use first non-log-flag argument as command
+CMD="${REMAINING_ARGS[0]:-}"
+
+case "$CMD" in
   stop)
     docker compose down
     cleanup_containers
@@ -82,18 +111,55 @@ case "${1:-}" in
     echo ""
     echo "Update complete. Restart with: claude-secure"
     ;;
+  logs)
+    LOG_SVC="${REMAINING_ARGS[1]:-}"
+    case "$LOG_SVC" in
+      hook)       tail -f "$LOG_DIR/hook.jsonl" 2>/dev/null ;;
+      anthropic)  tail -f "$LOG_DIR/anthropic.jsonl" 2>/dev/null ;;
+      iptables)   tail -f "$LOG_DIR/iptables.jsonl" 2>/dev/null ;;
+      clear)
+        rm -f "$LOG_DIR"/*.jsonl
+        echo "Logs cleared."
+        ;;
+      "")
+        # Guard against unmatched glob when no .jsonl files exist yet
+        shopt -s nullglob
+        LOG_FILES=("$LOG_DIR"/*.jsonl)
+        shopt -u nullglob
+        if [ ${#LOG_FILES[@]} -eq 0 ]; then
+          echo "No log files found in $LOG_DIR. Start services with log:* flags first."
+          exit 0
+        fi
+        tail -f "${LOG_FILES[@]}"
+        ;;
+      *)
+        echo "Unknown log service: $LOG_SVC"
+        echo "Usage: claude-secure logs [hook|anthropic|iptables|clear]"
+        exit 1
+        ;;
+    esac
+    ;;
   help|--help|-h)
-    echo "Usage: claude-secure [command]"
+    echo "Usage: claude-secure [command] [log:hook] [log:anthropic] [log:iptables] [log:all]"
     echo ""
     echo "Commands:"
     echo "  (none)     Start containers and open Claude Code session"
     echo "  status     Show container status and Claude Code version"
     echo "  stop       Stop all containers"
+    echo "  logs       Tail all log files (logs hook|anthropic|iptables for specific service)"
     echo "  update     Pull latest claude-secure and rebuild all images"
     echo "  upgrade    Rebuild claude image with latest Claude Code (--no-cache)"
     echo "  help       Show this help message"
+    echo ""
+    echo "Log flags (append to any command):"
+    echo "  log:hook       Enable hook script logging"
+    echo "  log:anthropic  Enable proxy logging"
+    echo "  log:iptables   Enable validator/iptables logging"
+    echo "  log:all        Enable all logging"
     ;;
   *)
+    # Ensure log directory exists before docker compose up (pitfall 5)
+    mkdir -p "$LOG_DIR"
     cleanup_containers
     docker compose up -d
     docker compose exec -it claude claude --dangerously-skip-permissions
