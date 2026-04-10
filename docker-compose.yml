@@ -17,9 +17,11 @@ services:
       - HTTP_PROXY=http://proxy:8080
       - HTTPS_PROXY=http://proxy:8080
       - NO_PROXY=localhost,127.0.0.1,proxy
+      - LOG_HOOK=${LOG_HOOK:-0}
     volumes:
       - workspace:/workspace
       - ./config/whitelist.json:/etc/claude-secure/whitelist.json:ro
+      - ${LOG_DIR:-./logs}:/var/log/claude-secure
     networks:
       - claude-internal
     cap_drop:
@@ -41,8 +43,10 @@ services:
       - GITHUB_TOKEN=${GITHUB_TOKEN:-}
       - STRIPE_KEY=${STRIPE_KEY:-}
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - LOG_ANTHROPIC=${LOG_ANTHROPIC:-0}
     volumes:
       - ./config/whitelist.json:/etc/claude-secure/whitelist.json:ro
+      - ${LOG_DIR:-./logs}:/var/log/claude-secure
     networks:
       claude-internal:
         aliases:
@@ -57,9 +61,12 @@ services:
     network_mode: "service:claude"
     cap_add:
       - NET_ADMIN
+    environment:
+      - LOG_IPTABLES=${LOG_IPTABLES:-0}
     volumes:
       - ./config/whitelist.json:/etc/claude-secure/whitelist.json:ro
       - validator-db:/data
+      - ${LOG_DIR:-./logs}:/var/log/claude-secure
     depends_on:
       claude:
         condition: service_started

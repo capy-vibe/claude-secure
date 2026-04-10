@@ -8,6 +8,25 @@ const UPSTREAM = process.env.REAL_ANTHROPIC_BASE_URL || 'https://api.anthropic.c
 const WHITELIST_PATH = process.env.WHITELIST_PATH || '/etc/claude-secure/whitelist.json';
 const warnedEnvVars = new Set();
 
+const LOG_PATH = '/var/log/claude-secure/anthropic.jsonl';
+const LOG_ENABLED = process.env.LOG_ANTHROPIC === '1';
+
+function logJson(level, msg, extra) {
+  if (!LOG_ENABLED) return;
+  try {
+    const entry = JSON.stringify({
+      ts: new Date().toISOString(),
+      svc: 'anthropic',
+      level,
+      msg,
+      ...extra
+    }) + '\n';
+    fs.appendFileSync(LOG_PATH, entry);
+  } catch (e) {
+    // Silently ignore log write failures
+  }
+}
+
 // External DNS resolver to bypass Docker network aliases (which map api.anthropic.com to this proxy)
 const externalResolver = new dns.Resolver();
 externalResolver.setServers(['8.8.8.8', '1.1.1.1']);
@@ -98,9 +117,11 @@ const server = http.createServer((req, res) => {
   let body = '';
   req.on('data', chunk => { body += chunk; });
   req.on('end', () => {
+    const startTime = Date.now();
     // Load config fresh on each request (SECR-04)
     const config = loadWhitelist();
     if (!config) {
+      logJson('error', 'Failed to load whitelist config');
       res.writeHead(500, { 'content-type': 'application/json' });
       res.end(JSON.stringify({ error: 'Proxy configuration error', detail: 'Failed to load whitelist config' }));
       return;
@@ -113,6 +134,7 @@ const server = http.createServer((req, res) => {
     // For forward proxy requests, validate domain against whitelist
     if (isForwardProxy && !isDomainAllowed(url.hostname, config)) {
       console.warn('Forward proxy blocked: ' + url.hostname + ' (not in whitelist)');
+      logJson('warn', 'Blocked request to non-whitelisted domain', { method: req.method, domain: url.hostname });
       res.writeHead(403, { 'content-type': 'application/json' });
       res.end(JSON.stringify({ error: 'Forbidden', detail: 'Domain not in whitelist: ' + url.hostname }));
       return;
@@ -157,11 +179,13 @@ const server = http.createServer((req, res) => {
 
         res.writeHead(upstreamRes.statusCode, resHeaders);
         res.end(restoredBody);
+        logJson('info', 'Forwarded request to upstream', { method: req.method, path: url.pathname, redacted: redactMap.length, status: upstreamRes.statusCode, duration_ms: Date.now() - startTime });
       });
     });
 
       upstreamReq.on('error', err => {
         console.error('Upstream error:', err.message);
+        logJson('error', 'Upstream request failed', { method: req.method, path: url.pathname, error: err.message });
         res.writeHead(502, { 'content-type': 'application/json' });
         res.end(JSON.stringify({ error: 'Bad Gateway', detail: err.message }));
       });
@@ -195,6 +219,7 @@ server.on('connect', (req, clientSocket, head) => {
 
   if (!isDomainAllowed(hostname, config)) {
     console.warn('CONNECT blocked: ' + hostname + ' (not in whitelist)');
+    logJson('warn', 'Blocked CONNECT to non-whitelisted domain', { domain: hostname });
     clientSocket.write('HTTP/1.1 403 Forbidden\r\n\r\n');
     clientSocket.end();
     return;

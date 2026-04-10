@@ -18,11 +18,28 @@ log() {
   echo "[$(date -Iseconds)] $*" >> "$LOG_FILE" 2>/dev/null || true
 }
 
+log_json() {
+  local level="$1" action="$2" msg="$3"
+  if [ "${LOG_HOOK:-0}" = "1" ]; then
+    jq -nc \
+      --arg ts "$(date -Iseconds)" \
+      --arg svc "hook" \
+      --arg level "$level" \
+      --arg action "$action" \
+      --arg msg "$msg" \
+      --arg tool "${TOOL_NAME:-}" \
+      --arg domain "${DOMAIN:-}" \
+      '{ts: $ts, svc: $svc, level: $level, action: $action, msg: $msg, tool: $tool, domain: $domain}' \
+      >> "/var/log/claude-secure/hook.jsonl" 2>/dev/null || true
+  fi
+}
+
 # --- Decision helpers ---
 
 deny() {
   local reason="$1"
   log "DENY: $reason"
+  log_json "warn" "deny" "$reason"
   jq -n --arg reason "$reason" '{
     hookSpecificOutput: {
       hookEventName: "PreToolUse",
@@ -35,6 +52,7 @@ deny() {
 
 allow() {
   log "ALLOW: $1"
+  log_json "info" "allow" "$1"
   exit 0
 }
 
@@ -147,6 +165,7 @@ register_call_id() {
   body=$(echo "$response" | sed '$d')
   if [ "$http_code" = "200" ]; then
     log "REGISTERED call-id=${call_id} domain=${domain}"
+    log_json "info" "register" "call-id=${call_id} domain=${domain}"
     return 0
   else
     log "REGISTER FAILED: http_code=${http_code} body=${body}"
