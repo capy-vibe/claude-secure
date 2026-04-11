@@ -199,7 +199,7 @@ Plans:
 **Requirements**: TEST-01, TEST-02, TEST-03, TEST-04, TEST-05
 **Depends on:** Phase 10
 **Gap Closure:** Closes gaps from v1.0 audit
-**Plans:** 1 plan
+**Plans:** 1/1 plans complete
 
 Plans:
-- [ ] 11-01-PLAN.md -- Fix test-map.json coverage, mark TEST requirements complete, document /validate as debug-only
+- [x] 11-01-PLAN.md -- Fix test-map.json coverage, mark TEST requirements complete, document /validate as debug-only
