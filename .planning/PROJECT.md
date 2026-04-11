@@ -31,6 +31,7 @@ No secret ever leaves the isolated environment uncontrolled — every outbound c
 
 - [ ] Integration tests that verify blocked/allowed call scenarios end-to-end in Docker
 - [x] Multi-instance support: `--instance NAME` flag, auto-creation, DNS-safe validation, list/remove commands, instance-scoped config and logs — *Validated in Phase 09: multi-instance-support*
+- [x] Pre-push hook with smart test selection, dedicated test instance, clean-state guarantees, and failure summary table — *Validated in Phase 10: automate-pre-push-tests*
 
 ### Out of Scope
 
