@@ -220,6 +220,25 @@ build_images() {
   log_info "Docker images built successfully"
 }
 
+install_git_hooks() {
+  local hooks_src="$app_dir/git-hooks"
+  local hooks_dst
+  hooks_dst="$(git -C "$app_dir" rev-parse --git-dir 2>/dev/null)/hooks" || return 0
+
+  if [ ! -d "$hooks_src" ]; then
+    return 0
+  fi
+
+  for hook in "$hooks_src"/*; do
+    [ -f "$hook" ] || continue
+    local name
+    name="$(basename "$hook")"
+    cp "$hook" "$hooks_dst/$name"
+    chmod +x "$hooks_dst/$name"
+  done
+  log_info "Installed git hooks from git-hooks/"
+}
+
 install_cli() {
   local cli_src="$CONFIG_DIR/app/bin/claude-secure"
   local target
@@ -259,6 +278,8 @@ main() {
   copy_app_files
   build_images
   install_cli
+
+  install_git_hooks
 
   echo ""
   log_info "Installation complete!"

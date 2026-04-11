@@ -1,0 +1,64 @@
+#!/bin/bash
+set -uo pipefail
+
+# Pre-push hook: run all integration tests before allowing push.
+# Requires Docker containers to be running.
+# Skip with: git push --no-verify
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+TEST_DIR="$REPO_ROOT/tests"
+
+echo "========================================"
+echo "  Pre-push: Running integration tests"
+echo "========================================"
+echo ""
+
+# Check if Docker is available
+if ! command -v docker &>/dev/null; then
+  echo "FATAL: docker not found. Cannot run integration tests."
+  echo "Push blocked. Use 'git push --no-verify' to skip."
+  exit 1
+fi
+
+# Check if containers are running (quick check via compose)
+if ! docker compose ps --status running --format '{{.Service}}' 2>/dev/null | grep -q .; then
+  echo "FATAL: No running containers detected."
+  echo "Start an instance first: claude-secure --instance <name>"
+  echo "Push blocked. Use 'git push --no-verify' to skip."
+  exit 1
+fi
+
+# Find and run all test scripts
+TESTS=("$TEST_DIR"/test-phase*.sh)
+if [ ${#TESTS[@]} -eq 0 ]; then
+  echo "WARNING: No test scripts found in $TEST_DIR"
+  exit 0
+fi
+
+FAILED=0
+PASSED=0
+
+for test_script in "${TESTS[@]}"; do
+  test_name="$(basename "$test_script" .sh)"
+  echo "--- $test_name ---"
+  if bash "$test_script"; then
+    ((PASSED++))
+  else
+    ((FAILED++))
+  fi
+  echo ""
+done
+
+echo "========================================"
+echo "  Results: $PASSED passed, $FAILED failed"
+echo "========================================"
+
+if [ "$FAILED" -gt 0 ]; then
+  echo ""
+  echo "Push blocked: $FAILED test suite(s) failed."
+  echo "Fix the failures and try again, or use 'git push --no-verify' to skip."
+  exit 1
+fi
+
+echo "All tests passed. Pushing..."
+exit 0
