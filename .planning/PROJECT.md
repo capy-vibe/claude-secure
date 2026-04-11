@@ -89,4 +89,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-10 after Phase 09 completion — Multi-instance support with --instance flag, auto-creation, and instance-scoped configuration*
+*Last updated: 2026-04-11 after Phase 11 completion — v1.0 milestone cleanup: test coverage gaps closed, TEST-01 through TEST-05 verified complete, /validate documented as debug-only*
