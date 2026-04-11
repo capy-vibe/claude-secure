@@ -232,6 +232,62 @@ Body logs can be large. Use `log:bodies` only for targeted debugging or security
 
 By default, proxy logs never include request or response bodies -- only metadata (HTTP method, path, status code, duration, and redaction count). The `log:bodies` flag opts in to body logging, which is safe because bodies are captured after the redaction layer has replaced all secrets with placeholders.
 
+## Testing
+
+### Quick Start
+
+Requires Docker running. All tests use an isolated `claude-test` Docker Compose instance that does not interfere with any running `claude-secure` session.
+
+```bash
+# Run all integration tests
+./run-tests.sh
+
+# Run specific test suites
+./run-tests.sh test-phase1.sh test-phase3.sh
+```
+
+### Available Test Suites
+
+| Script | Covers |
+|--------|--------|
+| test-phase1.sh | Container infrastructure, networking, health checks |
+| test-phase2.sh | Call validation, hook enforcement, iptables rules |
+| test-phase3.sh | Secret redaction in proxy |
+| test-phase4.sh | Installer script |
+| test-phase6.sh | Phase 6 features |
+| test-phase7.sh | Environment file and secret loading |
+| test-phase9.sh | CLI wrapper (bin/claude-secure) |
+
+### Smart Pre-Push Hook
+
+The pre-push hook (`git-hooks/pre-push`) automatically runs relevant tests before each push:
+
+- **Smart selection** -- Determines which test suites to run based on changed files using `tests/test-map.json`. For example, editing files under `proxy/` triggers `test-phase1.sh` and `test-phase3.sh`.
+- **Doc-only skip** -- Changes limited to `*.md`, `.planning/`, or `.claude/` skip tests entirely.
+- **Fallback** -- If changed files have no mapping in test-map.json, all tests run as a safety net.
+- **Isolated instance** -- Tests run in a dedicated `claude-test` Docker Compose project, separate from any running session.
+- **Skip**: `git push --no-verify`
+- **Force all tests**: `RUN_ALL_TESTS=1 git push`
+
+### test-map.json Structure
+
+The file `tests/test-map.json` controls smart test selection with two keys:
+
+- **`mappings`** -- Array of `{paths: [...], tests: [...]}` objects. Each entry maps file path prefixes to the test suites that cover them.
+- **`always_skip`** -- Array of patterns (globs like `*.md`, directory prefixes like `.planning/`) that never trigger tests.
+
+Example from the actual file:
+
+```json
+{
+  "mappings": [
+    { "paths": ["proxy/"], "tests": ["test-phase1.sh", "test-phase3.sh"] },
+    { "paths": ["install.sh"], "tests": ["test-phase4.sh"] }
+  ],
+  "always_skip": [".planning/", ".claude/", ".git/", "*.md"]
+}
+```
+
 ## Architecture Details
 
 ### claude Container
