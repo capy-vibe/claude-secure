@@ -49,11 +49,11 @@
 
 ### Testing
 
-- [ ] **TEST-01**: Integration test verifies that direct outbound connections from the claude container are blocked
-- [ ] **TEST-02**: Integration test verifies that traffic through the proxy reaches Anthropic successfully
-- [ ] **TEST-03**: Integration test verifies that known secrets are redacted from proxy outbound traffic
-- [ ] **TEST-04**: Integration test verifies that calls without valid call-ID registration are blocked by iptables
-- [ ] **TEST-05**: Integration test verifies that the PreToolUse hook blocks payloads to non-whitelisted domains
+- [x] **TEST-01**: Integration test verifies that direct outbound connections from the claude container are blocked
+- [x] **TEST-02**: Integration test verifies that traffic through the proxy reaches Anthropic successfully
+- [x] **TEST-03**: Integration test verifies that known secrets are redacted from proxy outbound traffic
+- [x] **TEST-04**: Integration test verifies that calls without valid call-ID registration are blocked by iptables
+- [x] **TEST-05**: Integration test verifies that the PreToolUse hook blocks payloads to non-whitelisted domains
 
 ### Platform Support
 
@@ -145,11 +145,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | INST-04 | Phase 4 | Complete |
 | INST-05 | Phase 4 | Complete |
 | INST-06 | Phase 4 | Complete |
-| TEST-01 | Phase 11 (was Phase 5) | Pending |
-| TEST-02 | Phase 11 (was Phase 5) | Pending |
-| TEST-03 | Phase 11 (was Phase 5) | Pending |
-| TEST-04 | Phase 11 (was Phase 5) | Pending |
-| TEST-05 | Phase 11 (was Phase 5) | Pending |
+| TEST-01 | Phase 11 (was Phase 5) | Complete |
+| TEST-02 | Phase 11 (was Phase 5) | Complete |
+| TEST-03 | Phase 11 (was Phase 5) | Complete |
+| TEST-04 | Phase 11 (was Phase 5) | Complete |
+| TEST-05 | Phase 11 (was Phase 5) | Complete |
 | PLAT-01 | Phase 4 | Complete |
 | PLAT-02 | Phase 4 | Complete |
 | PLAT-03 | Phase 4 | Complete |
@@ -174,4 +174,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-04-08*
-*Last updated: 2026-04-10 after Phase 9 multi-instance requirements added*
+*Last updated: 2026-04-11 after Phase 11 TEST requirements verified complete*
