@@ -102,7 +102,6 @@ Recent decisions affecting current work:
 ### Pending Todos
 
 - **iptables packet-level logging**: Add iptables `-j LOG` rules for DROP/ACCEPT and poll `dmesg`/`/proc/kmsg` from validator background thread to capture actual packet allow/block events into `iptables.jsonl`. Currently only HTTP-level events (registration, validation) are logged — silent drops at the network layer are invisible.
-- **Run tests before git push**: Add a git pre-push hook to run tests before allowing pushes.
 - **Fix permission prompts despite dangerously-skip-permissions**: Still getting confirmation prompts (e.g. `rm -rf`) despite flag being set. Possibly related to `node:22-slim` base image.
 
 ### Blockers/Concerns
