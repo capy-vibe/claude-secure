@@ -187,8 +187,8 @@ Plans:
 **Goal:** Pre-push hook intelligently selects and runs integration tests based on changed files, using a dedicated isolated test instance with clean-state guarantees between suites and structured failure output
 **Requirements**: D-01, D-02, D-03, D-04, D-05, D-06, D-07, D-08, D-09
 **Depends on:** Phase 9
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 
 Plans:
-- [ ] 10-01-PLAN.md -- Migrate test scripts to docker compose exec, create test-map.json and test.env
+- [x] 10-01-PLAN.md -- Migrate test scripts to docker compose exec, create test-map.json and test.env
 - [ ] 10-02-PLAN.md -- Rewrite pre-push hook with smart test selection, test instance lifecycle, and failure summary
