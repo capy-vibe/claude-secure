@@ -40,8 +40,19 @@ report() {
 cleanup() {
   echo ""
   echo "Cleaning up..."
-  # Kill mock upstream if running
-  docker compose exec -T proxy pkill -f "mock-upstream" 2>/dev/null || true
+  # Kill mock upstream if running (use node since proxy image lacks procps/pkill)
+  docker compose exec -T proxy node -e '
+    const fs = require("fs");
+    try {
+      const pids = fs.readdirSync("/proc").filter(f => /^\d+$/.test(f));
+      for (const pid of pids) {
+        try {
+          const cmdline = fs.readFileSync("/proc/" + pid + "/cmdline", "utf8");
+          if (cmdline.includes("mock-upstream")) { process.kill(parseInt(pid)); }
+        } catch(e) {}
+      }
+    } catch(e) {}
+  ' 2>/dev/null || true
   # Remove log file
   docker compose exec -T proxy rm -f /tmp/upstream-requests.log 2>/dev/null || true
   # Bring down with override
@@ -58,7 +69,7 @@ echo ""
 
 # --- Setup: create compose override with test secrets and mock upstream ---
 echo "Creating test compose override..."
-cat > "$OVERRIDE_FILE" <<'YAML'
+cat > "$OVERRIDE_FILE" <<YAML
 services:
   proxy:
     environment:
@@ -68,6 +79,7 @@ services:
       - GITHUB_TOKEN=ghp_test_secret_value_12345
       - STRIPE_KEY=sk_test_stripe_secret_67890
       - OPENAI_API_KEY=sk-test-openai-secret-abcde
+      - WHITELIST_PATH=/tmp/whitelist-test.json
   claude:
     environment:
       - ANTHROPIC_BASE_URL=http://proxy:8080
@@ -94,6 +106,9 @@ if [ "$READY" != "true" ]; then
   docker compose -f docker-compose.yml -f "$OVERRIDE_FILE" logs proxy
   exit 1
 fi
+
+# Copy whitelist to writable location inside proxy (WHITELIST_PATH=/tmp/whitelist-test.json)
+docker compose exec -T proxy cp /etc/claude-secure/whitelist.json /tmp/whitelist-test.json
 
 # Start mock upstream inside proxy container
 echo "Starting mock upstream server..."
@@ -221,24 +236,16 @@ report "SECR-03" "Placeholders restored to real values in responses" $SECR03_OK
 # SECR-04: Config hot-reload (whitelist changes without restart)
 # =========================================================================
 # Baseline: secrets are being redacted (already proven by SECR-02)
-# Now remove the GITHUB entry from whitelist inside the proxy container
-docker compose exec -T proxy sh -c 'cat /etc/claude-secure/whitelist.json' > /tmp/whitelist-backup.json 2>/dev/null
+# Now remove the GITHUB entry from whitelist inside the proxy container.
+# The override sets WHITELIST_PATH=/tmp/whitelist-test.json (a container-local
+# copy created at startup). Proxy re-reads on each request.
 
-# The whitelist is mounted read-only. Copy it, modify, and override the WHITELIST_PATH.
-# Actually, the mount is :ro so we cannot modify it in place. Instead, we copy to a
-# writable location, modify it, and the proxy reads from WHITELIST_PATH which is the
-# ro mount. We need a different approach.
-#
-# Approach: Since we can't modify the ro mount, we'll test hot-reload by modifying
-# the HOST file (which is bind-mounted). The proxy re-reads on each request.
+# Save original inside container
+docker compose exec -T proxy cp /tmp/whitelist-test.json /tmp/whitelist-test.json.bak 2>/dev/null
 
-# Save original whitelist
-cp config/whitelist.json config/whitelist.json.bak
-
-# Remove GITHUB entry from whitelist on host (bind-mount propagates to container)
-jq 'del(.secrets[] | select(.env_var == "GITHUB_TOKEN"))' config/whitelist.json > config/whitelist-modified.json
-cp config/whitelist-modified.json config/whitelist.json
-rm config/whitelist-modified.json
+# Remove GITHUB entry inside container (proxy re-reads on each request)
+docker compose exec -T proxy sh -c \
+  "node -e \"const d=JSON.parse(require('fs').readFileSync('/tmp/whitelist-test.json','utf8')); d.secrets=d.secrets.filter(s=>s.env_var!=='GITHUB_TOKEN'); require('fs').writeFileSync('/tmp/whitelist-test.json',JSON.stringify(d,null,2))\""
 
 # Clear upstream log
 docker compose exec -T proxy truncate -s 0 /tmp/upstream-requests.log 2>/dev/null
@@ -260,9 +267,11 @@ if echo "$UPSTREAM_LOG3" | grep -q 'ghp_test_secret_value_12345' && \
 fi
 report "SECR-04" "Config hot-reload: removed secret no longer redacted" $SECR04_OK
 
-# Restore original whitelist
-cp config/whitelist.json.bak config/whitelist.json
-rm -f config/whitelist.json.bak
+# Restore original whitelist inside container
+docker compose exec -T proxy sh -c \
+  "cp /tmp/whitelist-test.json.bak /tmp/whitelist-test.json" 2>/dev/null || \
+  docker compose exec -T proxy sh -c \
+  "cat /tmp/whitelist-test.json.bak > /tmp/whitelist-test.json" 2>/dev/null
 
 # =========================================================================
 # SECR-04b: Config hot-reload -- re-added secret is redacted again

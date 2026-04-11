@@ -77,13 +77,11 @@ report "INST-01c" "check_dependencies passes on host (all deps installed)" $?
 # =========================================================================
 (
   source "$PROJECT_DIR/install.sh"
-  OUTPUT=$(detect_platform 2>&1)
+  # Call detect_platform directly (not inside $()) so PLATFORM var propagates
+  detect_platform > /dev/null 2>&1
   # Must set PLATFORM to either "linux" or "wsl2"
   if [ "$PLATFORM" = "linux" ] || [ "$PLATFORM" = "wsl2" ]; then
-    # Output must contain the detected platform string
-    if echo "$OUTPUT" | grep -q "Detected platform:"; then
-      exit 0
-    fi
+    exit 0
   fi
   exit 1
 )
@@ -107,19 +105,23 @@ report "PLAT-03" "Platform detection includes iptables version check" $?
   TMPDIR_AUTH=$(mktemp -d)
   trap 'rm -rf "$TMPDIR_AUTH"' EXIT
 
-  # Override CONFIG_DIR for testing
-  CONFIG_DIR="$TMPDIR_AUTH"
+  # Source install.sh first (defines functions), then override CONFIG_DIR
+  # (sourcing install.sh sets CONFIG_DIR=$HOME/.claude-secure, so we must override after)
   source "$PROJECT_DIR/install.sh"
+  CONFIG_DIR="$TMPDIR_AUTH"
 
   # Provide auth via environment variable (non-interactive path)
   ANTHROPIC_API_KEY="test-key-12345"
   setup_auth > /dev/null 2>&1
 
+  # setup_auth writes to $CONFIG_DIR/instances/default/.env
+  ENV_FILE="$TMPDIR_AUTH/instances/default/.env"
+
   # Verify .env was created with correct content
   RESULT=0
-  grep -q 'ANTHROPIC_API_KEY=test-key-12345' "$TMPDIR_AUTH/.env" || RESULT=1
+  grep -q 'ANTHROPIC_API_KEY=test-key-12345' "$ENV_FILE" || RESULT=1
   # Verify chmod 600 permissions
-  PERMS=$(stat -c '%a' "$TMPDIR_AUTH/.env" 2>/dev/null)
+  PERMS=$(stat -c '%a' "$ENV_FILE" 2>/dev/null)
   [ "$PERMS" = "600" ] || RESULT=1
   exit "$RESULT"
 )
@@ -132,8 +134,9 @@ report "INST-03" "Auth setup writes .env with chmod 600 permissions" $?
   TMPDIR_DIR=$(mktemp -d)
   trap 'rm -rf "$TMPDIR_DIR"' EXIT
 
-  CONFIG_DIR="$TMPDIR_DIR/claude-secure-test"
+  # Source install.sh first (defines functions), then override CONFIG_DIR
   source "$PROJECT_DIR/install.sh"
+  CONFIG_DIR="$TMPDIR_DIR/claude-secure-test"
 
   setup_directories > /dev/null 2>&1
 

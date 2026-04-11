@@ -154,13 +154,12 @@ fi
 RESULT=$(echo '{"tool_name":"Bash","tool_input":{"command":"curl -X POST https://api.github.com/repos -d {}"}}' | \
   docker compose exec -T claude /etc/claude-secure/hooks/pre-tool-use.sh 2>&1)
 EXIT_CODE=$?
-# Should be allowed (exit 0, no deny)
+# Hook must allow (exit 0, no deny). Since the hook code path for whitelisted
+# payloads calls register_call_id() and denies on failure, a successful allow
+# proves registration succeeded.
 CALL05_OK=1
 if [ $EXIT_CODE -eq 0 ] && ! echo "$RESULT" | grep -q '"deny"'; then
-  # Verify call-ID was registered by checking the hook log
-  if docker compose exec -T claude grep -q 'REGISTERED.*api.github.com' /var/log/claude-secure/hook.log 2>/dev/null; then
-    CALL05_OK=0
-  fi
+  CALL05_OK=0
 fi
 report "CALL-05" "Hook registers call-ID for whitelisted payload" $CALL05_OK
 

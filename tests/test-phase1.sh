@@ -45,9 +45,11 @@ echo ""
 report "DOCK-01" "Claude container has no direct internet access" $?
 
 # DOCK-02: Proxy can reach external URLs (node used -- proxy image has no curl)
+# NOTE: Cannot use api.anthropic.com here -- Docker network alias maps it to the
+# proxy itself on claude-internal. Use a neutral external URL instead.
 docker compose exec -T proxy node -e '
   const https = require("https");
-  const r = https.get("https://api.anthropic.com/v1", {timeout: 10000}, res => {
+  const r = https.get("https://httpbin.org/get", {timeout: 10000}, res => {
     process.exit(res.statusCode < 500 ? 0 : 1);
   });
   r.on("error", () => process.exit(1));
@@ -60,8 +62,11 @@ test "$(docker compose ps --format json | jq -s 'length')" -eq 3 > /dev/null 2>&
 report "DOCK-03" "Docker Compose runs all 3 containers" $?
 
 # DOCK-04: Outbound connections blocked from claude (iptables OUTPUT DROP)
-# DNS may resolve via Docker embedded DNS but actual connections are blocked by iptables
-! docker compose exec -T claude curl -sf --max-time 5 https://google.com > /dev/null 2>&1
+# DNS may resolve via Docker embedded DNS but actual connections are blocked by iptables.
+# NOTE: Must use a domain NOT in the whitelist's readonly_domains or allowed_domains,
+# because the claude container has HTTP_PROXY set which routes through the proxy's
+# CONNECT handler that allows whitelisted domains.
+! docker compose exec -T claude curl -sf --max-time 5 https://blocked-test.example.com > /dev/null 2>&1
 report "DOCK-04" "Outbound connections from claude container are blocked" $?
 
 # DOCK-05: Security files root-owned and read-only

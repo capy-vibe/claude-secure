@@ -213,8 +213,9 @@ const server = http.createServer((req, res) => {
     };
 
     // For reverse proxy (Anthropic API): resolve via external DNS to bypass Docker alias
-    // For forward proxy: use hostname directly (already resolved correctly)
-    if (!isForwardProxy) {
+    // For forward proxy or local upstream: use hostname directly
+    const isLocalhost = url.hostname === 'localhost' || url.hostname === '127.0.0.1' || url.hostname === '::1';
+    if (!isForwardProxy && !isLocalhost) {
       externalResolver.resolve4(url.hostname, (err, addresses) => {
         if (err || !addresses.length) {
           console.error('DNS resolution failed for ' + url.hostname + ': ' + (err ? err.message : 'no addresses'));

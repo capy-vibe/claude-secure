@@ -10,6 +10,7 @@ TEST_DIR="$REPO_ROOT/tests"
 TEST_ENV="$REPO_ROOT/tests/test.env"
 TEST_WHITELIST=$(mktemp)
 cp "$REPO_ROOT/config/whitelist.json" "$TEST_WHITELIST"
+chmod 666 "$TEST_WHITELIST"
 trap 'rm -f "$TEST_WHITELIST"' EXIT
 
 echo ""
@@ -53,6 +54,7 @@ export SECRETS_FILE="$TEST_ENV"
 export WHITELIST_PATH="$TEST_WHITELIST"
 export WORKSPACE_PATH="${TMPDIR:-/tmp}/claude-test-workspace"
 export LOG_DIR="${TMPDIR:-/tmp}/claude-test-logs"
+export LOG_HOOK=0
 
 mkdir -p "$WORKSPACE_PATH" "$LOG_DIR"
 
@@ -68,15 +70,10 @@ for test_script in "${SELECTED_TESTS[@]}"; do
   test_name="${test_script%.sh}"
   echo "--- $test_name ---"
 
-  docker compose down --volumes --remove-orphans --timeout 5 2>/dev/null
+  docker compose down --volumes --remove-orphans --timeout 5 2>/dev/null || true
 
-  if ! docker compose up -d --wait --timeout 60 2>/dev/null; then
-    echo "FATAL: containers failed to start for $test_name"
-    SUITE_RESULTS+=("$test_name FAIL")
-    FATAL=1
-    break
-  fi
-
+  # Each test script handles its own container startup (build + up + health checks),
+  # so we only tear down between suites -- no redundant up here.
   TEST_OUTPUT=$(bash "$TEST_DIR/$test_script" 2>&1)
   TEST_EXIT=$?
   echo "$TEST_OUTPUT"
