@@ -1,0 +1,20 @@
+{
+  "mappings": [
+    { "paths": ["claude/"], "tests": ["test-phase1.sh", "test-phase2.sh"] },
+    { "paths": ["proxy/"], "tests": ["test-phase1.sh", "test-phase3.sh"] },
+    { "paths": ["validator/"], "tests": ["test-phase1.sh", "test-phase2.sh"] },
+    { "paths": ["docker-compose.yml"], "tests": ["test-phase1.sh"] },
+    { "paths": ["config/whitelist.json"], "tests": ["test-phase1.sh", "test-phase3.sh"] },
+    { "paths": ["install.sh"], "tests": ["test-phase4.sh"] },
+    { "paths": ["bin/claude-secure"], "tests": ["test-phase9.sh"] },
+    { "paths": ["git-hooks/"], "tests": ["test-phase2.sh"] },
+    { "paths": ["tests/test-phase1.sh"], "tests": ["test-phase1.sh"] },
+    { "paths": ["tests/test-phase2.sh"], "tests": ["test-phase2.sh"] },
+    { "paths": ["tests/test-phase3.sh"], "tests": ["test-phase3.sh"] },
+    { "paths": ["tests/test-phase4.sh"], "tests": ["test-phase4.sh"] },
+    { "paths": ["tests/test-phase6.sh"], "tests": ["test-phase6.sh"] },
+    { "paths": ["tests/test-phase7.sh"], "tests": ["test-phase7.sh"] },
+    { "paths": ["tests/test-phase9.sh"], "tests": ["test-phase9.sh"] }
+  ],
+  "always_skip": [".planning/", ".claude/", ".git/", "*.md"]
+}
